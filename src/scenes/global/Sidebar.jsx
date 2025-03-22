@@ -14,6 +14,9 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import Logo from '../../mobileLogo.png';
 import SettingsIcon from '@mui/icons-material/Settings';
 import SlideshowIcon from '@mui/icons-material/Slideshow';
+import EditIcon from '@mui/icons-material/Edit';
+import AddIcon from '@mui/icons-material/Add';
+
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
   const theme = useTheme();
@@ -138,6 +141,27 @@ const Sidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
+            {/* <Item
+              title="updata"
+              to="/updata"
+               icon={<EditIcon  />}
+              selected={selected}
+              setSelected={setSelected}
+            /> */}
+            <Item
+              title="Greate"
+              to="/create"
+              icon={<AddIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+             <Item
+              title="show all product"
+              to="/read"
+              icon={<VisibilityIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
 
             <Typography
               variant="h6"
@@ -146,16 +170,17 @@ const Sidebar = () => {
             >
               Changes
             </Typography>
+           
             <Item
-              title="show all product"
-              to="/read"
-              icon={<VisibilityIcon />}
+              title="edit slidebar images"
+              to="/sliderbar"
+              icon={<EditIcon  />}
               selected={selected}
               setSelected={setSelected}
             />
             <Item
-              title="update slidebar images"
-              to="/slidebar"
+              title="Show slidebar images"
+              to="/showslider"
               icon={<SlideshowIcon />}
               selected={selected}
               setSelected={setSelected}

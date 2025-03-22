@@ -123,10 +123,12 @@ import UpdateProd from "./products/update";
 import DeleteProd from "./products/delete";
 import CreateNew from "./products/createNew";
 import Setting from "./scenes/setting";
-import SlideBar from "./scenes/slideShow";
+import ShowSlider from "./scenes/ShowSlider";
+import SlideBar from "./scenes/sliderbar";
 import Login from "./scenes/form";
 import ProtectedRoute from "./protectedRoute";
 import { AuthProvider } from "./authContext";
+import Greate from "./products/greate";
 
 function App() {
   const [theme, colorMode] = useMode();
@@ -152,12 +154,15 @@ function App() {
                       {!isLoginPage && <Topbar setIsSidebar={setIsSidebar} />}
                       <Routes>
                         <Route path="/" element={<Dashboard />} />
-                        <Route path="/create" element={<CreateNew />} />
-                        <Route path="/update" element={<UpdateProd />} />
-                        <Route path="/delete" element={<DeleteProd />} />
+                        <Route path="/create" element={<Greate />} />
+                        {/* <Route path="/update" element={<UpdateProd />} /> */}
+                        {/* <Route path="/delete" element={<DeleteProd />} /> */}
                         <Route path="/read" element={<Allprod />} />
                         <Route path="/setting" element={<Setting />} />
-                        <Route path="/slidebar" element={<SlideBar />} />
+                        <Route path="/sliderbar" element={<SlideBar />} />
+                        <Route path="/ShowSlider" element={<ShowSlider />} />
+                        <Route path="/allprod" element={<Allprod />} />
+                        <Route path="/updateprod/:id" element={<UpdateProd />} />
                       </Routes>
                     </main>
                   </div>
