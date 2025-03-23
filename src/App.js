@@ -129,7 +129,7 @@ import Login from "./scenes/form";
 import ProtectedRoute from "./protectedRoute";
 import { AuthProvider } from "./authContext";
 import Greate from "./products/greate";
-
+import Gmail from './products/gmail'
 function App() {
   const [theme, colorMode] = useMode();
   const [isSidebar, setIsSidebar] = useState(true);
@@ -163,6 +163,7 @@ function App() {
                         <Route path="/ShowSlider" element={<ShowSlider />} />
                         <Route path="/allprod" element={<Allprod />} />
                         <Route path="/updateprod/:id" element={<UpdateProd />} />
+                        <Route path="/gmail" element={<Gmail />} />
                       </Routes>
                     </main>
                   </div>

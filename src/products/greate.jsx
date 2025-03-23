@@ -1,4 +1,4 @@
-import { Box, Button, IconButton, Typography, useTheme, TextField } from "@mui/material";
+import { Box, Button, IconButton, Typography, useTheme, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
 import { tokens } from "../theme";
 import Header from "../components/Header";
 import Table from "@mui/material/Table";
@@ -22,6 +22,8 @@ const Greate = () => {
   const [company, setCompany] = useState("");
   const [price, setPrice] = useState("");
   const [image, setImage] = useState(null);
+  const [open, setOpen] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState(null);
 
   useEffect(() => {
     fetch("http://localhost:5000/item")
@@ -35,7 +37,7 @@ const Greate = () => {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImage(reader.result); // تحويل الصورة إلى Base64
+        setImage(reader.result);
       };
       reader.readAsDataURL(file);
     }
@@ -66,35 +68,51 @@ const Greate = () => {
       .catch((err) => console.error("Error adding product:", err));
   };
 
-  const handleDeleteProduct = (id) => {
-    fetch(`http://localhost:5000/item/${id}`, { method: "DELETE" })
-      .then(() => setProducts(products.filter((product) => product.id !== id)))
+  const handleOpenDialog = (id) => {
+    setSelectedProductId(id);
+    setOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpen(false);
+    setSelectedProductId(null);
+  };
+
+  const handleConfirmDelete = () => {
+    fetch(`http://localhost:5000/item/${selectedProductId}`, { method: "DELETE" })
+      .then(() => {
+        setProducts(products.filter((product) => product.id !== selectedProductId));
+        alert("تم حذف المنتج بنجاح!");
+      })
       .catch((err) => console.error("Error deleting product:", err));
+    handleCloseDialog();
   };
 
   return (
     <Box m="20px">
-      <Box display="flex" justifyContent="space-between" alignItems="center">
-        <Header title="Your Products" subtitle="Manage your products" />
-      </Box>
+      <Header title="Your Products" subtitle="Manage your products" />
 
-      {/* نموذج إدخال المنتج */}
-      <Box display="flex" gap="10px" my="20px">
-        <TextField label="Product Name" variant="outlined" value={name} onChange={(e) => setName(e.target.value)} />
-        <TextField label="Category" variant="outlined" value={category} onChange={(e) => setCategory(e.target.value)} />
-        <TextField label="Company" variant="outlined" value={company} onChange={(e) => setCompany(e.target.value)} />
-        <TextField label="Price" variant="outlined" type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
-        <Button variant="contained" component="label">
+      <Box sx={{
+        display: "flex", 
+        flexWrap: "wrap",
+        gap: "10px", 
+        my: "20px",
+        justifyContent: "center"
+      }}>
+        <TextField label="Product Name" variant="outlined" value={name} onChange={(e) => setName(e.target.value)} sx={{ width: { xs: "100%", sm: "auto" } }} />
+        <TextField label="Category" variant="outlined" value={category} onChange={(e) => setCategory(e.target.value)} sx={{ width: { xs: "100%", sm: "auto" } }} />
+        <TextField label="Company" variant="outlined" value={company} onChange={(e) => setCompany(e.target.value)} sx={{ width: { xs: "100%", sm: "auto" } }} />
+        <TextField label="Price" variant="outlined" type="number" value={price} onChange={(e) => setPrice(e.target.value)} sx={{ width: { xs: "100%", sm: "auto" } }} />
+        <Button variant="contained" component="label" sx={{ width: { xs: "100%", sm: "auto" } }}>
           Upload Image
           <input type="file" hidden accept="image/*" onChange={handleImageUpload} />
         </Button>
-        <Button variant="contained" color="primary" onClick={handleAddProduct} startIcon={<AddIcon />}>
+        <Button variant="contained" color="primary" onClick={handleAddProduct} startIcon={<AddIcon />} sx={{ width: { xs: "100%", sm: "auto" } }}>
           Add Product
         </Button>
       </Box>
 
-      {/* عرض المنتجات */}
-      <TableContainer component={Paper} sx={{ marginTop: "20px" }}>
+      <TableContainer component={Paper} sx={{ marginTop: "20px", overflowX: "auto" }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -112,14 +130,14 @@ const Greate = () => {
               <TableRow key={product.id}>
                 <TableCell>{product.id}</TableCell>
                 <TableCell>
-                  {product.image && <img src={product.image} alt={product.name} width="50" height="50" />}
+                  {product.image && <img src={product.image} alt={product.name} width="50" height="50" style={{ objectFit: "cover" }} />}
                 </TableCell>
                 <TableCell>{product.name}</TableCell>
                 <TableCell>{product.category}</TableCell>
                 <TableCell>{product.company}</TableCell>
                 <TableCell>${product.price}</TableCell>
                 <TableCell>
-                  <IconButton color="error" onClick={() => handleDeleteProduct(product.id)}>
+                  <IconButton color="error" onClick={() => handleOpenDialog(product.id)}>
                     <DeleteIcon />
                   </IconButton>
                 </TableCell>
@@ -128,6 +146,17 @@ const Greate = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      <Dialog open={open} onClose={handleCloseDialog}>
+        <DialogTitle>تأكيد الحذف</DialogTitle>
+        <DialogContent>
+          <DialogContentText>هل أنت متأكد أنك تريد حذف هذا المنتج؟</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>إلغاء</Button>
+          <Button onClick={handleConfirmDelete} color="error">حذف</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

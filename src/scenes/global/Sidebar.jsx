@@ -16,6 +16,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import SlideshowIcon from '@mui/icons-material/Slideshow';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
+import EmailIcon from "@mui/icons-material/Email";
 
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
@@ -122,6 +123,13 @@ const Sidebar = () => {
               title="Dashboard"
               to="/"
               icon={<HomeOutlinedIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+            <Item
+              title="Gmail"
+              to="/gmail"
+              icon={<EmailIcon  />}
               selected={selected}
               setSelected={setSelected}
             />
