@@ -291,7 +291,7 @@ const UpdateProd = () => {
                 </Typography>
                 <ul>
                   {serverErrors.map((err, i) => (
-                    <li key={i}>{err}</li>
+                    <li style={{direction:'ltr',listStyle:"none"}} key={i}>{err}</li>
                   ))}
                 </ul>
               </CardContent>

@@ -127,7 +127,8 @@ const ADDcolor = () => {
   };
 
   return (
-    <Box sx={{ p: 3, maxWidth: 500 }}>
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center'}}>
+      <Box sx={{ p: 3, maxWidth: 500 }}>
       {/* حقل البحث عن الجهاز */}
       <Autocomplete
         options={mobiles}
@@ -226,7 +227,8 @@ const ADDcolor = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </Box>
+      </Box>
+    </div>
   );
 };
 

@@ -71,7 +71,8 @@ const AddBrand = () => {
   };
 
   return (
-    <Box sx={{ p: 3, maxWidth: 500 }}>
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center'}}>
+      <Box sx={{ p: 3, maxWidth: 500 }}>
       <TextField
         label="اسم الماركة"
         value={brand.name}
@@ -128,7 +129,8 @@ const AddBrand = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </Box>
+      </Box>
+    </div>
   );
 };
 

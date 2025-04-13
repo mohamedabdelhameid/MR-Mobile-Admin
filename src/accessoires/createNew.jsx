@@ -696,7 +696,7 @@ const CreateAccessory = () => {
               name="color"
               label="اللون *"
               variant="outlined"
-              type="color"
+              type="text"
               value={formData.color}
               onChange={handleChange}
               InputLabelProps={{ shrink: true }}

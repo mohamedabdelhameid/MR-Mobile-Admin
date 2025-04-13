@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Box, Typography, Button, CircularProgress, Alert } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import OrderTable from '../../orders/orderTable';
+import OrdersPage from '../../orders/orderTable';
+import StatisticsChart from '../../charts/graph';
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
@@ -130,7 +132,7 @@ const Dashboard = () => {
           ))}
         </Box>
       )}
-      <OrderTable />
+      <StatisticsChart />
     </Box>
   );
 };
