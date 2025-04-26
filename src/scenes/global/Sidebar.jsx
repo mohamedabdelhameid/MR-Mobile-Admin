@@ -14,6 +14,9 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import Logo from '../../mobileLogo.png';
 import SettingsIcon from '@mui/icons-material/Settings';
 import SlideshowIcon from '@mui/icons-material/Slideshow';
+import EditIcon from '@mui/icons-material/Edit';
+import AddIcon from '@mui/icons-material/Add';
+
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
   const theme = useTheme();
@@ -129,22 +132,7 @@ const Sidebar = () => {
               color={colors.grey[300]}
               sx={{ m: "15px 0 5px 20px" }}
             >
-              Pages
-            </Typography>
-            <Item
-              title="Setting"
-              to="/setting"
-              icon={<SettingsIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-
-            <Typography
-              variant="h6"
-              color={colors.grey[300]}
-              sx={{ m: "15px 0 5px 20px" }}
-            >
-              Changes
+              Products
             </Typography>
             <Item
               title="show all product"
@@ -154,9 +142,70 @@ const Sidebar = () => {
               setSelected={setSelected}
             />
             <Item
-              title="update slidebar images"
-              to="/slidebar"
-              icon={<SlideshowIcon />}
+              title="Create New products"
+              to="/create"
+              icon={<AddIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+
+
+            <Typography
+              variant="h6"
+              color={colors.grey[300]}
+              sx={{ m: "15px 0 5px 20px" }}
+            >
+              Image & Color
+            </Typography>
+            <Item
+              title="Add product color"
+              to="/addColor"
+              icon={<VisibilityIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+
+
+            <Typography
+              variant="h6"
+              color={colors.grey[300]}
+              sx={{ m: "15px 0 5px 20px" }}
+            >
+              Brands
+            </Typography>
+            <Item
+              title="show all brands"
+              to="/showBrand"
+              icon={<VisibilityIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+            <Item
+              title="Create New brand"
+              to="/createBrand"
+              icon={<AddIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+            
+            <Typography
+              variant="h6"
+              color={colors.grey[300]}
+              sx={{ m: "15px 0 5px 20px" }}
+            >
+              Accessoires
+            </Typography>
+            <Item
+              title="show all accessoires"
+              to="/showacc"
+              icon={<VisibilityIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+            <Item
+              title="Create New accessoires"
+              to="/crtacc"
+              icon={<AddIcon />}
               selected={selected}
               setSelected={setSelected}
             />

@@ -1,14 +1,14 @@
-// import { 
-//   Box, 
-//   Table, 
-//   TableBody, 
-//   TableCell, 
-//   TableContainer, 
-//   TableHead, 
-//   TableRow, 
-//   Paper, 
-//   IconButton, 
-//   Button 
+// import {
+//   Box,
+//   Table,
+//   TableBody,
+//   TableCell,
+//   TableContainer,
+//   TableHead,
+//   TableRow,
+//   Paper,
+//   IconButton,
+//   Button
 // } from "@mui/material";
 // import { useEffect, useState } from "react";
 // import { useNavigate } from "react-router-dom";
@@ -84,13 +84,13 @@
 //                 <TableRow key={product.id}>
 //                   <TableCell>{index + 1}</TableCell> {/* ترقيم يبدأ من 1 */}
 //                   <TableCell>
-//                     {product.image_cover && (
-//                       <img 
-//                         src={product.image_cover} 
-//                         alt={product.title} 
-//                         width="80" 
-//                         height="100" 
-//                         style={{ objectFit: "cover", borderRadius: "5px" }} 
+//                     {product.image && (
+//                       <img
+//                         src={product.image}
+//                         alt={product.title}
+//                         width="80"
+//                         height="100"
+//                         style={{ objectFit: "cover", borderRadius: "5px" }}
 //                       />
 //                     )}
 //                   </TableCell>
@@ -120,28 +120,17 @@
 
 // export default Allprod;
 
-
-
-
-
-
-
-
-
-
-
-
-import { 
-  Box, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
-  Paper, 
-  IconButton, 
-  Button 
+import {
+  Box,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+  Button,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -149,11 +138,11 @@ import Header from "../components/Header";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-const API_URL = "http://127.0.0.1:8000/api/mobiles"; // رابط API للمنتجات
+const API_URL = "http://127.0.0.1:8000/api/accessories"; // رابط API للمنتجات
 const BRANDS_API_URL = "http://127.0.0.1:8000/api/brands"; // رابط API للبراندات
 const Images = "http://127.0.0.1:8000"; // رابط API للصور
 
-const Allprod = () => {
+const Showacc = () => {
   const [products, setProducts] = useState([]);
   const [brands, setBrands] = useState([]); // قائمة البراندات
   const navigate = useNavigate();
@@ -184,57 +173,59 @@ const Allprod = () => {
     return brand ? brand.name : "Unknown Brand"; // إذا لم يتم العثور على البراند
   };
 
-    const [isDeleting, setIsDeleting] = useState(false);
-  
-  const handleDeleteProduct = async (id) => {
-    setIsDeleting(true);
-    try {
-      // const handleDeleteProduct = async (id) => {
-        const confirmDelete = window.confirm("هل أنت متأكد أنك تريد حذف هذا المنتج؟");
+ 
+
+  const [isDeleting, setIsDeleting] = useState(false);
+
+const handleDeleteProduct = async (id) => {
+  setIsDeleting(true);
+  try {
+    // const handleDeleteProduct = async (id) => {
+      const confirmDelete = window.confirm("هل أنت متأكد أنك تريد حذف هذا المنتج؟");
+      
+      if (!confirmDelete) return;
+    
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          // إذا لم يكن هناك token، توجيه المستخدم للصفحة تسجيل الدخول
+          navigate("/login");
+          return;
+        }
+    
+        const response = await fetch(`${API_URL}/${id}`, {
+          method: "DELETE",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+          },
+        });
+    
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "فشل في حذف المنتج");
+        }
+    
+        // تحديث الواجهة بعد الحذف
+        setProducts(products.filter((product) => product.id !== id));
         
-        if (!confirmDelete) return;
-      
-        try {
-          const token = localStorage.getItem("token");
-          if (!token) {
-            // إذا لم يكن هناك token، توجيه المستخدم للصفحة تسجيل الدخول
-            navigate("/login");
-            return;
-          }
-      
-          const response = await fetch(`${API_URL}/${id}`, {
-            method: "DELETE",
-            headers: {
-              "Authorization": `Bearer ${token}`,
-              // "Accept": "application/json",
-              // "Content-Type": "application/json",
-            },
-          });
-      
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || "فشل في حذف المنتج");
-          }
-      
-          // تحديث الواجهة بعد الحذف
-          setProducts(products.filter((product) => product.id !== id));
-          
-          // إظهار رسالة نجاح
-          alert("تم حذف المنتج بنجاح");
-          
-        } catch (error) {
-          console.error("Error deleting product:", error);
-          alert(error.message || "حدث خطأ أثناء حذف المنتج");
-        // }
-      };
-    } finally {
-      setIsDeleting(false);
-    }
-  };
+        // إظهار رسالة نجاح
+        alert("تم حذف المنتج بنجاح");
+        
+      } catch (error) {
+        console.error("Error deleting product:", error);
+        alert(error.message || "حدث خطأ أثناء حذف المنتج");
+      // }
+    };
+  } finally {
+    setIsDeleting(false);
+  }
+};
 
   return (
     <Box m="20px">
-      <Header title="Your Mobiles" subtitle="Manage all your mobiles here" />
+      <Header title="Your Products" subtitle="Manage all your products here" />
 
       {products.length > 0 ? (
         <TableContainer component={Paper} sx={{ mt: 3 }}>
@@ -255,24 +246,34 @@ const Allprod = () => {
                 <TableRow key={product.id}>
                   <TableCell>{index + 1}</TableCell> {/* ترقيم يبدأ من 1 */}
                   <TableCell>
-                    {product.image_cover && (
-                      <img 
-                        src={`${Images}${product.image_cover}`}
-                        alt={product.title} 
-                        width="80" 
-                        height="100" 
-                        style={{ objectFit: "cover", borderRadius: "5px" }} 
-                        onClick={() => navigate(`/products/${product.id}`)}
+                    {product.image && (
+                      <img
+                        src={`${Images}${product.image}`}
+                        alt={product.title}
+                        width="80"
+                        height="100"
+                        style={{ objectFit: "cover", borderRadius: "5px" }}
+                        onClick={() => navigate(`/accessories/${product.id}`)}
                       />
                     )}
                   </TableCell>
                   <TableCell>{product.title}</TableCell>
-                  <TableCell>ج.م{product.price}</TableCell>
+                  {/* <TableCell>{getBrandName(product.brand_id)}</TableCell> {/* اسم البراند */}
+                  {/* <TableCell>{product.model_number}</TableCell> */}
+                  <TableCell> ج.م {product.price}</TableCell>
                   <TableCell>
-                    <IconButton color="warning" onClick={() => navigate(`/updateprod/${product.id}`, { state: product })}>
+                    <IconButton
+                      color="warning"
+                      onClick={() =>
+                        navigate(`/Updteacc/${product.id}`, { state: product })
+                      }
+                    >
                       <EditIcon />
                     </IconButton>
-                    <IconButton color="error" onClick={() => handleDeleteProduct(product.id)}>
+                    <IconButton
+                      color="error"
+                      onClick={() => handleDeleteProduct(product.id)}
+                    >
                       <DeleteIcon />
                     </IconButton>
                   </TableCell>
@@ -282,10 +283,12 @@ const Allprod = () => {
           </Table>
         </TableContainer>
       ) : (
-        <p style={{ textAlign: "center", marginTop: "20px" }}>لا توجد منتجات متاحة</p>
+        <p style={{ textAlign: "center", marginTop: "20px" }}>
+          لا توجد منتجات متاحة
+        </p>
       )}
     </Box>
   );
 };
 
-export default Allprod;
+export default Showacc;

@@ -13,14 +13,13 @@ import {
 import Header from "../components/Header";
 import { useParams, useNavigate } from "react-router-dom";
 
-const API_URL = "http://127.0.0.1:8000/api/mobiles";
-const Images = "http://127.0.0.1:8000";
+const API_URL = "http://localhost:8000/api/accessories";
+const Images = "http://localhost:8000";
 
 const UI_STATUS_OPTIONS = {
   active: "فعال",
-  // inactive: "غير فعال",
   out_of_stock: "نفذ من المخزون",
-  coming_soon: "قريباً", // تمت إضافتها لدعم هذه الحالة
+  coming_soon: "قريباً",
 };
 
 const UpdateProd = () => {
@@ -30,21 +29,15 @@ const UpdateProd = () => {
   const [product, setProduct] = useState({
     title: "",
     brand_id: "",
-    model_number: "",
     description: "",
     battery: "",
-    processor: "",
-    storage: "",
-    display: "",
+    speed: "",
     price: "",
     discount: "",
-    operating_system: "",
-    camera: "",
-    network_support: "",
-    release_year: "",
     stock_quantity: "",
     rating: "",
-    image_cover: "",
+    image: "",
+    color: "",
     status: "active",
   });
 
@@ -55,17 +48,24 @@ const UpdateProd = () => {
   const [initialProduct, setInitialProduct] = useState(null);
   const [serverErrors, setServerErrors] = useState([]);
 
-  // دالة لتحويل القيمة من API إلى قيمة متوافقة مع الواجهة
   const normalizeStatusFromAPI = (apiStatus) => {
-    return apiStatus === "available" ? "active" : apiStatus;
+    const statusMap = {
+      available: "active",
+      out_of_stock: "out_of_stock",
+      coming_soon: "coming_soon",
+    };
+    return statusMap[apiStatus] || "active";
   };
 
-  // دالة لتحويل القيمة قبل إرسالها للAPI
   const normalizeStatusForAPI = (uiStatus) => {
-    return uiStatus === "active" ? "available" : uiStatus;
+    const reverseMap = {
+      active: "available",
+      out_of_stock: "out_of_stock",
+      coming_soon: "coming_soon",
+    };
+    return reverseMap[uiStatus] || "available";
   };
 
-  // جلب بيانات المنتج
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -86,6 +86,7 @@ const UpdateProd = () => {
             ...data.data,
             status: normalizeStatusFromAPI(data.data.status),
           };
+
           setProduct(normalizedData);
           setInitialProduct(normalizedData);
         }
@@ -103,7 +104,6 @@ const UpdateProd = () => {
     fetchProduct();
   }, [id, navigate]);
 
-  // تتبع التغييرات
   useEffect(() => {
     if (initialProduct) {
       setHasChanges(JSON.stringify(product) !== JSON.stringify(initialProduct));
@@ -112,6 +112,11 @@ const UpdateProd = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    if (name === "status" && !UI_STATUS_OPTIONS[value]) {
+      return;
+    }
+
     setProduct((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -119,8 +124,14 @@ const UpdateProd = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (!file.type.match("image.*")) {
-      alert("الرجاء اختيار ملف صورة فقط (JPEG, PNG, etc.)");
+    const validImageTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+    ];
+    if (!validImageTypes.includes(file.type)) {
+      alert("الرجاء اختيار ملف صورة فقط (JPEG, PNG, GIF, WebP)");
       return;
     }
 
@@ -132,30 +143,24 @@ const UpdateProd = () => {
     setImageFile(file);
     const reader = new FileReader();
     reader.onloadend = () => {
-      setProduct((prev) => ({ ...prev, image_cover: reader.result }));
+      setProduct((prev) => ({ ...prev, image: reader.result }));
     };
     reader.readAsDataURL(file);
     setHasChanges(true);
   };
 
   const validateForm = () => {
+    const newErrors = {};
+
     const requiredFields = [
       "title",
       "brand_id",
-      "model_number",
+      "description",
       "battery",
-      "processor",
-      "storage",
-      "display",
       "price",
-      "operating_system",
-      "network_support",
-      "release_year",
       "stock_quantity",
       "status",
     ];
-
-    const newErrors = {};
 
     requiredFields.forEach((field) => {
       if (!product[field]?.toString().trim()) {
@@ -163,21 +168,55 @@ const UpdateProd = () => {
       }
     });
 
-    if (!product.price || isNaN(product.price) || product.price < 0)
-      newErrors.price = "السعر يجب أن يكون رقم موجب";
+    if (product.title && product.title.length < 3) {
+      newErrors.title = "يجب أن يكون العنوان أكثر من 3 أحرف";
+    }
+
     if (
-      !product.stock_quantity ||
-      isNaN(product.stock_quantity) ||
-      product.stock_quantity < 0
-    )
-      newErrors.stock_quantity = "الكمية يجب أن تكون رقم موجب";
+      product.brand_id &&
+      !/^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$/.test(
+        product.brand_id
+      )
+    ) {
+      newErrors.brand_id = "معرّف الماركة غير صالح";
+    }
+
+    if (product.battery && (isNaN(product.battery) || product.battery < 0)) {
+      newErrors.battery = "يجب أن تكون سعة البطارية رقم موجب";
+    }
+    if (product.speed && (isNaN(product.speed) || product.speed < 0)) {
+      newErrors.speed = "يجب أن تكون سعة البطارية رقم موجب";
+    }
+
     if (
-      !product.release_year ||
-      isNaN(product.release_year) ||
-      product.release_year < 2000 ||
-      product.release_year > new Date().getFullYear() + 1
-    )
-      newErrors.release_year = "سنة الإصدار غير صالحة";
+      product.price &&
+      (isNaN(parseFloat(product.price)) || parseFloat(product.price) <= 0)
+    ) {
+      newErrors.price = "يجب أن يكون السعر رقم موجب";
+    }
+
+    if (
+      product.discount &&
+      (isNaN(product.discount) ||
+        product.discount < 0 ||
+        product.discount > 100)
+    ) {
+      newErrors.discount = "يجب أن يكون الخصم بين 0 و 100";
+    }
+
+    if (
+      product.stock_quantity &&
+      (isNaN(product.stock_quantity) || product.stock_quantity < 0)
+    ) {
+      newErrors.stock_quantity = "يجب أن تكون الكمية رقم موجب";
+    }
+
+    if (
+      product.rating &&
+      (isNaN(product.rating) || product.rating < 0 || product.rating > 5)
+    ) {
+      newErrors.rating = "يجب أن يكون التقييم بين 0 و 5";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -205,51 +244,74 @@ const UpdateProd = () => {
         return;
       }
 
-      // 1. إنشاء FormData
-      const formData = new FormData();
-
-      // 2. إضافة جميع الحقول
-      const productToSend = {
-        ...product,
-        status: normalizeStatusForAPI(product.status),
-        _method: "PUT", // هذا مهم للخوادم التي لا تدعم PUT مباشرة
+      let requestBody;
+      let headers = {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
       };
 
-      Object.entries(productToSend).forEach(([key, value]) => {
-        if (value !== null && value !== undefined) {
-          formData.append(key, value);
-        }
-      });
+      // تحقق مما إذا كان الاسم قد تغير
+      const titleHasChanged =
+        initialProduct && initialProduct.title !== product.title;
+      const titleToSend = titleHasChanged
+        ? product.title
+        : initialProduct?.title;
 
-      // 3. إضافة الصورة إذا كانت موجودة
+      // إذا كان هناك صورة جديدة، استخدم FormData
       if (imageFile) {
-        formData.append("image_cover", imageFile);
+        requestBody = new FormData();
+        requestBody.append("id", id);
+        requestBody.append("title", titleToSend);
+        requestBody.append("brand_id", product.brand_id);
+        requestBody.append("description", product.description);
+        requestBody.append("battery", product.battery);
+        requestBody.append("speed", product.speed);
+        requestBody.append("price", product.price);
+        requestBody.append("discount", product.discount);
+        requestBody.append("stock_quantity", product.stock_quantity);
+        requestBody.append("rating", product.rating);
+        requestBody.append("status", normalizeStatusForAPI(product.status));
+        requestBody.append("image", imageFile);
+        requestBody.append("_method", "PUT");
+      } else {
+        // إذا لم يكن هناك صورة جديدة، استخدم JSON
+        headers["Content-Type"] = "application/json";
+        requestBody = JSON.stringify({
+          id: id,
+          title: titleToSend,
+          brand_id: product.brand_id,
+          description: product.description,
+          battery: product.battery,
+          speed: product.speed,
+          price: product.price,
+          discount: product.discount,
+          stock_quantity: product.stock_quantity,
+          rating: product.rating,
+          status: normalizeStatusForAPI(product.status),
+          _method: "PUT",
+        });
       }
 
-      // const formData = new FormData();
-
-      // 4. إرسال الطلب
       const response = await fetch(`${API_URL}/${id}`, {
-        method: "POST", // نستخدم POST مع _method PUT
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
-        body: formData,
+        method: "POST",
+        headers: headers,
+        body: requestBody,
       });
 
-      // 5. معالجة الاستجابة
       const data = await response.json();
 
       if (!response.ok) {
         if (data.errors) {
-          setServerErrors(Object.values(data.errors).flat());
+          const serverErrorMessages = [];
+          for (const [field, messages] of Object.entries(data.errors)) {
+            serverErrorMessages.push(`${field}: ${messages.join(" ,  ")}`);
+          }
+          setServerErrors(serverErrorMessages);
         }
         throw new Error(data.message || "فشل في تحديث المنتج");
       }
 
-      // 6. إذا نجح التحديث
-      navigate("/allprod", { state: { message: "تم تحديث المنتج بنجاح" } });
+      navigate("/showacc", { state: { message: "تم تحديث المنتج بنجاح" } });
     } catch (error) {
       console.error("Error:", error);
       alert(error.message || "حدث خطأ أثناء التحديث");
@@ -265,7 +327,7 @@ const UpdateProd = () => {
     ) {
       return;
     }
-    navigate("/allprod");
+    navigate("/showacc");
   };
 
   return (
@@ -291,14 +353,15 @@ const UpdateProd = () => {
                 </Typography>
                 <ul>
                   {serverErrors.map((err, i) => (
-                    <li style={{direction:'ltr',listStyle:"none"}} key={i}>{err}</li>
+                    <li style={{ direction: "ltr", listStyle: "none" }} key={i}>
+                      {err}
+                    </li>
                   ))}
                 </ul>
               </CardContent>
             </Card>
           )}
 
-          {/* Basic Information */}
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -325,15 +388,6 @@ const UpdateProd = () => {
                   onChange={handleChange}
                   error={!!errors.brand_id}
                   helperText={errors.brand_id}
-                  fullWidth
-                />
-                <TextField
-                  label="رقم الموديل *"
-                  name="model_number"
-                  value={product.model_number}
-                  onChange={handleChange}
-                  error={!!errors.model_number}
-                  helperText={errors.model_number}
                   fullWidth
                 />
                 <TextField
@@ -394,7 +448,6 @@ const UpdateProd = () => {
             </CardContent>
           </Card>
 
-          {/* Description */}
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -412,7 +465,6 @@ const UpdateProd = () => {
             </CardContent>
           </Card>
 
-          {/* Specifications */}
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -433,94 +485,31 @@ const UpdateProd = () => {
                   fullWidth
                 />
                 <TextField
-                  label="المعالج *"
-                  name="processor"
-                  value={product.processor}
+                  label="سرعه الشاحن (وات) *"
+                  name="speed"
+                  value={product.speed}
                   onChange={handleChange}
-                  error={!!errors.processor}
-                  helperText={errors.processor}
-                  fullWidth
-                />
-                <TextField
-                  label="التخزين *"
-                  name="storage"
-                  value={product.storage}
-                  onChange={handleChange}
-                  error={!!errors.storage}
-                  helperText={errors.storage}
-                  fullWidth
-                />
-                <TextField
-                  label="الشاشة *"
-                  name="display"
-                  value={product.display}
-                  onChange={handleChange}
-                  error={!!errors.display}
-                  helperText={errors.display}
-                  fullWidth
-                />
-                <TextField
-                  label="نظام التشغيل *"
-                  name="operating_system"
-                  value={product.operating_system}
-                  onChange={handleChange}
-                  error={!!errors.operating_system}
-                  helperText={errors.operating_system}
-                  fullWidth
-                />
-                <TextField
-                  label="الكاميرا"
-                  name="camera"
-                  value={product.camera}
-                  onChange={handleChange}
-                  fullWidth
-                />
-                <TextField
-                  label="دعم الشبكة *"
-                  name="network_support"
-                  value={product.network_support}
-                  onChange={handleChange}
-                  error={!!errors.network_support}
-                  helperText={errors.network_support}
-                  fullWidth
-                />
-                <TextField
-                  label="سنة الإصدار *"
-                  name="release_year"
-                  value={product.release_year}
-                  onChange={handleChange}
-                  type="number"
-                  error={!!errors.release_year}
-                  helperText={errors.release_year}
-                  fullWidth
-                />
-                <TextField
-                  label="التقييم"
-                  name="rating"
-                  value={product.rating}
-                  onChange={handleChange}
-                  type="number"
-                  inputProps={{ min: 0, max: 5, step: 0.1 }}
+                  error={!!errors.speed}
+                  helperText={errors.speed}
                   fullWidth
                 />
               </Box>
             </CardContent>
           </Card>
 
-          {/* Product Image */}
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 صورة المنتج
               </Typography>
               <Box display="flex" alignItems="center" gap={3}>
-                {product.image_cover && (
+                {product.image && (
                   <Box
                     component="img"
                     src={
-                      product.image_cover.startsWith("data:image")
-                        ? product.image_cover
-                        : `${Images}${product.image_cover}`
+                      product.image.startsWith("data:image")
+                        ? product.image
+                        : `${Images}${product.image}`
                     }
                     alt="Product Preview"
                     sx={{
@@ -541,7 +530,7 @@ const UpdateProd = () => {
                   />
                   <label htmlFor="product-image-upload">
                     <Button variant="contained" component="span">
-                      {product.image_cover ? "تغيير الصورة" : "رفع صورة"}
+                      {product.image ? "تغيير الصورة" : "رفع صورة"}
                     </Button>
                   </label>
                   <Typography variant="caption" display="block" sx={{ mt: 1 }}>
@@ -552,7 +541,6 @@ const UpdateProd = () => {
             </CardContent>
           </Card>
 
-          {/* Action Buttons */}
           <Box display="flex" justifyContent="flex-end" gap={2} mt={3}>
             <Button
               variant="contained"
