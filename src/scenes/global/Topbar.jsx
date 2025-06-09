@@ -6,6 +6,7 @@ import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
 import { useNavigate } from "react-router-dom";
+import { CarpenterTwoTone, ShoppingCart } from "@mui/icons-material";
 
 const Topbar = () => {
   const theme = useTheme();
@@ -57,6 +58,10 @@ const Topbar = () => {
           ) : (
             <LightModeOutlinedIcon />
           )}
+        </IconButton>
+
+        <IconButton onClick={()=>{navigate("/ordersPage")}}>
+            <ShoppingCart />
         </IconButton>
 
         <IconButton 

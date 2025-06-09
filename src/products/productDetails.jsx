@@ -30,7 +30,26 @@ const ProductDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [selectedColor, setSelectedColor] = useState(null); // اللون المحدد
+  const [selectedColor, setSelectedColor] = useState(null);
+  const [brandId, setBrandId] = useState("");
+  const [brands, setBrands] = useState([]);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  const showSnackbar = (message, severity) => {
+    setSnackbar({
+      open: true,
+      message,
+      severity,
+    });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -68,6 +87,35 @@ const ProductDetails = () => {
     fetchProductDetails();
   }, [id, navigate]);
 
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      showSnackbar("يرجى تسجيل الدخول أولاً", "error");
+      window.location.href = "/login";
+      return;
+    }
+
+    const fetchBrands = async () => {
+      try {
+        const response = await fetch(BRANDS_API_URL, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) throw new Error("فشل في جلب البيانات");
+
+        const data = await response.json();
+        setBrands(data.data || data.brands || []);
+      } catch (error) {
+        console.error("Error:", error);
+        showSnackbar("حدث خطأ أثناء جلب الماركات", "error");
+      }
+    };
+
+    fetchBrands();
+  }, []);
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" mt={4}>
@@ -92,27 +140,10 @@ const ProductDetails = () => {
     );
   }
 
-  // تحديد لون النص حسب خلفية اللون
-  const getContrastColor = (hexColor) => {
-    if (!hexColor.startsWith("#")) return "#000";
-
-    const r = parseInt(hexColor.slice(1, 3), 16);
-    const g = parseInt(hexColor.slice(3, 5), 16);
-    const b = parseInt(hexColor.slice(5, 7), 16);
-
-    // حساب درجة الإضاءة
-    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-
-    return brightness > 128 ? "#000000" : "#ffffff";
-  };
-
   return (
     <Box m="20px">
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Header title="تفاصيل المنتج" subtitle="عرض كافة معلومات المنتج" />
-        {/* <Button variant="primary" onClick={() => navigate(-1)}>
-          رجوع
-        </Button> */}
       </Box>
 
       <Grid container spacing={3} mt={2}>
@@ -121,7 +152,9 @@ const ProductDetails = () => {
           <Paper elevation={3} sx={{ p: 2, textAlign: "center" }}>
             <Avatar
               src={
-                product.image_cover.startsWith("http")
+                selectedColor?.images?.[0]?.image
+                  ? `${Images_URL}${selectedColor.images[0].image}`
+                  : product.image_cover.startsWith("http")
                   ? product.image_cover
                   : `${Images_URL}${product.image_cover}`
               }
@@ -195,7 +228,8 @@ const ProductDetails = () => {
               <Grid container spacing={2}>
                 <Grid item xs={6}>
                   <Typography variant="subtitle1">
-                    <strong>الماركة:</strong> {product.brand?.name}
+                    <strong>الماركة: </strong>
+                    {product.brand?.name || "غير معروف"}
                   </Typography>
                 </Grid>
                 <Grid item xs={6}>
@@ -205,14 +239,15 @@ const ProductDetails = () => {
                 </Grid>
                 <Grid item xs={6}>
                   <Typography variant="subtitle1">
-                    <strong>الكمية المتاحة:</strong> {product.stock_quantity}
+                    <strong>الكمية المتاحة:</strong> {product.total_quantity}
                   </Typography>
                 </Grid>
+                {product.rating && 
                 <Grid item xs={6}>
                   <Typography variant="subtitle1">
                     <strong>التقييم:</strong> {product.rating}/5
                   </Typography>
-                </Grid>
+                </Grid>}
                 <Grid item xs={6}>
                   <Typography variant="subtitle1">
                     <strong>الخصم:</strong> {product.discount}%
@@ -304,22 +339,18 @@ const ProductDetails = () => {
           >
             <img
               src={
-                selectedColor?.image
-                  ? `http://localhost:8000${selectedColor.image}`
+                selectedColor?.images?.[0]?.image
+                  ? `${Images_URL}${selectedColor.images[0].image}`
                   : product.image_cover.startsWith("http")
                   ? product.image_cover
                   : `${Images_URL}${product.image_cover}`
               }
-              alt={`لون ${selectedColor?.color || "المنتج"}`}
+              alt={`لون ${selectedColor?.color?.name || "المنتج"}`}
               style={{
                 maxWidth: "100%",
                 maxHeight: "350px",
                 objectFit: "contain",
                 borderRadius: "8px",
-              }}
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = "/placeholder-color.png"; // صورة افتراضية لو في مشكلة
               }}
             />
           </Box>
@@ -358,6 +389,7 @@ const ProductDetails = () => {
                         boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
                       },
                     }}
+                    onClick={() => setSelectedColor(color)}
                   >
                     {/* زر الحذف */}
                     <CloseIcon
@@ -376,7 +408,7 @@ const ProductDetails = () => {
                         },
                       }}
                       onClick={async (e) => {
-                        e.stopPropagation(); // لمنع اختيار اللون عند الضغط على الحذف
+                        e.stopPropagation();
 
                         if (window.confirm(`هل أنت متأكد من حذف هذا اللون؟`)) {
                           try {
@@ -395,7 +427,6 @@ const ProductDetails = () => {
                               throw new Error("فشل في حذف اللون");
                             }
 
-                            // تحديث قائمة الألوان بعد الحذف
                             setProduct((prev) => ({
                               ...prev,
                               colors: prev.colors.filter(
@@ -403,7 +434,6 @@ const ProductDetails = () => {
                               ),
                             }));
 
-                            // إذا كان اللون المحذوف هو المحدد حالياً
                             if (selectedColor?.id === color.id) {
                               setSelectedColor(null);
                             }
@@ -417,84 +447,75 @@ const ProductDetails = () => {
                       }}
                     />
 
-                    {/* معاينة اللون */}
-                    <Box onClick={() => setSelectedColor(color)}>
-                      {selectedColor?.id === color.id && (
-                        <GridCheckCircleIcon
-                          sx={{
-                            position: "absolute",
-                            top: -8,
-                            right: -8,
-                            color: "#4caf50",
-                            backgroundColor: "white",
+                    {selectedColor?.id === color.id && (
+                      <GridCheckCircleIcon
+                        sx={{
+                          position: "absolute",
+                          top: -8,
+                          right: -8,
+                          color: "#4caf50",
+                          backgroundColor: "white",
+                          borderRadius: "50%",
+                          fontSize: "24px",
+                        }}
+                      />
+                    )}
+
+                    <Box
+                      sx={{
+                        width: 80,
+                        height: 80,
+                        borderRadius: "50%",
+                        overflow: "hidden",
+                        border: "2px solid #fff",
+                        boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                        backgroundColor: color.color.hex_code.startsWith("#")
+                          ? color.color.hex_code
+                          : "#f5f5f5",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {color.images?.[0]?.image ? (
+                        <img
+                          src={`${Images_URL}${color.images[0].image}`}
+                          alt={`لون ${color.color.name}`}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
                             borderRadius: "50%",
-                            fontSize: "24px",
+                          }}
+                        />
+                      ) : (
+                        <Box
+                          sx={{
+                            width: "100%",
+                            height: "100%",
+                            borderRadius: "50%",
+                            backgroundColor: color.color.hex_code.startsWith("#")
+                              ? color.color.hex_code
+                              : "#d9d9d9",
                           }}
                         />
                       )}
-
-                      <Box
-                        sx={{
-                          width: 80,
-                          height: 80,
-                          borderRadius: "50%",
-                          overflow: "hidden",
-                          border: "2px solid #fff",
-                          boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                          backgroundColor: color.color.startsWith("#")
-                            ? color.color
-                            : "#f5f5f5",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        {color.image ? (
-                          <img
-                            src={`http://localhost:8000${color.image}`}
-                            alt={`لون ${color.color}`}
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover",
-                              borderRadius: "50%",
-                            }}
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = "/placeholder-color.png";
-                            }}
-                          />
-                        ) : (
-                          <Box
-                            sx={{
-                              width: "100%",
-                              height: "100%",
-                              borderRadius: "50%",
-                              backgroundColor: color.color.startsWith("#")
-                                ? color.color
-                                : "#d9d9d9",
-                            }}
-                          />
-                        )}
-                      </Box>
-
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          fontWeight:
-                            selectedColor?.id === color.id ? "bold" : "normal",
-                          color:
-                            selectedColor?.id === color.id
-                              ? "primary.main"
-                              : "text.primary",
-                          mt: 1,
-                        }}
-                      >
-                        {color.color.startsWith("#")
-                          ? `لون ${color.id.slice(0, 4)}`
-                          : color.color}
-                      </Typography>
                     </Box>
+
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontWeight:
+                          selectedColor?.id === color.id ? "bold" : "normal",
+                        color:
+                          selectedColor?.id === color.id
+                            ? "primary.main"
+                            : "text.primary",
+                        mt: 1,
+                      }}
+                    >
+                      {color.color.name || `لون ${color.id.slice(0, 4)}`}
+                    </Typography>
                   </Box>
                 ))}
               </Box>

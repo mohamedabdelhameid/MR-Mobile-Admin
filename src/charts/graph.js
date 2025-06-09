@@ -60,7 +60,7 @@ const StatisticsChart = () => {
   }, []);
 
   const chartData = {
-    labels: ["الطلبات", "المستخدمين", "الرسائل"],
+    labels: ["الطلبات", "المستخدمين", "الرسائل" ],
     datasets: [
       {
         label: "الإحصائيات",
@@ -130,7 +130,7 @@ const StatisticsChart = () => {
 
   return (
     <div style={{ width: "100%", height: "400px", padding: "20px" }}>
-      <Line data={chartData} options={chartOptions} />
+      <Line data={chartData} options={chartOptions} hover/>
     </div>
   );
 };

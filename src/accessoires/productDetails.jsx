@@ -15,10 +15,13 @@ import {
 } from "@mui/material";
 import Header from "../components/Header";
 import "./AD.css";
+import CloseIcon from "@mui/icons-material/Close";
+import { GridCheckCircleIcon } from "@mui/x-data-grid";
 
 const API_URL = "http://127.0.0.1:8000/api/accessories";
 const Images_URL = "http://127.0.0.1:8000";
 const BRANDS_API_URL = "http://127.0.0.1:8000/api/brands";
+const COLORS_API_URL = "http://127.0.0.1:8000/api/accessory-colors";
 
 const AccDetails = () => {
   const { id } = useParams();
@@ -27,80 +30,52 @@ const AccDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedColor, setSelectedColor] = useState(null);
   const [brands, setBrands] = useState([]);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  const showSnackbar = (message, severity) => {
+    setSnackbar({
+      open: true,
+      message,
+      severity,
+    });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
 
-    const fetchData = async () => {
+    const fetchProductDetails = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        // جلب بيانات المنتج والماركات معاً
-        const [productResponse, brandsResponse] = await Promise.all([
-          fetch(`${API_URL}/${id}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: "application/json",
-            },
-          }),
-          fetch(BRANDS_API_URL, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: "application/json",
-            },
-          }),
-        ]);
+        const response = await fetch(`${API_URL}/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+        });
 
-        // معالجة خطأ المنتج
-        if (!productResponse.ok) {
+        if (!response.ok) {
           throw new Error("فشل في جلب بيانات المنتج");
         }
-        const productData = await productResponse.json();
 
-        // معالجة خطأ الماركات
-        if (!brandsResponse.ok) {
-          throw new Error("فشل في جلب بيانات الماركات");
-        }
-        const brandsData = await brandsResponse.json();
-
-        // التحقق من تنسيق بيانات الماركات
-        let processedBrands = [];
-
-        if (Array.isArray(brandsData)) {
-          processedBrands = brandsData;
-        } else if (brandsData && Array.isArray(brandsData.data)) {
-          processedBrands = brandsData.data;
-        } else if (brandsData && brandsData.brands) {
-          processedBrands = brandsData.brands;
-        } else {
-          console.warn("تنسيق غير متوقع لبيانات الماركات:", brandsData);
-          processedBrands = [];
-        }
-
-        // التحقق من وجود الحقول المطلوبة
-        const isValidBrands = processedBrands.every(
-          (brand) => brand.id && brand.name
-        );
-
-        if (!isValidBrands) {
-          console.warn(
-            "بيانات الماركات لا تحتوي على الحقول المطلوبة (id, name)"
-          );
-          processedBrands = [];
-        }
-
-        setProduct(productData.data || productData);
-        setBrands(processedBrands);
+        const { data } = await response.json();
+        setProduct(data);
       } catch (err) {
         setError(err.message);
-        console.error("Error fetching data:", err);
+        console.error("Error:", err);
 
-        if (
-          err.message.includes("انتهت جلستك") ||
-          err.message.includes("غير مصرح")
-        ) {
+        if (err.message.includes("انتهت جلستك")) {
           navigate("/login");
         }
       } finally {
@@ -108,8 +83,38 @@ const AccDetails = () => {
       }
     };
 
-    fetchData();
+    fetchProductDetails();
   }, [id, navigate]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      showSnackbar("يرجى تسجيل الدخول أولاً", "error");
+      window.location.href = "/login";
+      return;
+    }
+
+    const fetchBrands = async () => {
+      try {
+        const response = await fetch(BRANDS_API_URL, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) throw new Error("فشل في جلب البيانات");
+
+        const data = await response.json();
+        setBrands(data.data || data.brands || []);
+      } catch (error) {
+        console.error("Error:", error);
+        showSnackbar("حدث خطأ أثناء جلب الماركات", "error");
+      }
+    };
+
+    fetchBrands();
+  }, []);
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" mt={4}>
@@ -134,15 +139,6 @@ const AccDetails = () => {
     );
   }
 
-  // دالة البحث عن اسم الماركة
-  const getBrandName = (brandId) => {
-    if (!brandId) return "غير محدد";
-    if (!Array.isArray(brands)) return "جاري التحميل...";
-
-    const brand = brands.find((b) => b.id === brandId);
-    return brand?.name || "غير معروف";
-  };
-
   return (
     <Box m="20px">
       <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -153,14 +149,18 @@ const AccDetails = () => {
         {/* الصورة */}
         <Grid item xs={12} md={6}>
           <Paper elevation={3} sx={{ p: 2, textAlign: "center" }}>
-            <img
-              src={`${Images_URL}${product.image}`}
+            <Avatar
+              src={
+                product.image.startsWith("http")
+                  ? product.image
+                  : `${Images_URL}${product.image}`
+              }
               alt={product.title}
               variant="rounded"
               sx={{
                 width: "100%",
                 height: "auto",
-                maxWidth: "300px",
+                maxHeight: 400,
                 borderRadius: 2,
               }}
             />
@@ -225,12 +225,15 @@ const AccDetails = () => {
               <Grid container spacing={2}>
                 <Grid item xs={6}>
                   <Typography variant="subtitle1">
-                    <strong>الماركة:</strong> {getBrandName(product.brand_id)}
+                    <strong>الماركة: </strong>
+                    {product.brand?.name ||
+                      brands.find((b) => b.id === product.brand_id)?.name ||
+                      "غير معروف"}
                   </Typography>
                 </Grid>
                 <Grid item xs={6}>
                   <Typography variant="subtitle1">
-                    <strong>الكمية المتاحة:</strong> {product.stock_quantity}
+                    <strong>الكمية المتاحة:</strong> {product.total_quantity}
                   </Typography>
                 </Grid>
                 <Grid item xs={6}>
@@ -251,20 +254,244 @@ const AccDetails = () => {
                 المواصفات الفنية
               </Typography>
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6} md={4}>
-                  <Typography>
-                    <strong>البطارية:</strong> {product.battery} mAh
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} sm={6} md={4}>
-                  <Typography>
-                    <strong>الألوان :</strong> {product.color}
-                  </Typography>
-                </Grid>
+                {product.battery && (
+                  <Grid item xs={12} sm={6} md={4}>
+                    <Typography>
+                      <strong>البطارية:</strong> {product.battery} mAh
+                    </Typography>
+                  </Grid>
+                )}
+                {product.speed && (
+                  <Grid item xs={12} sm={6} md={4}>
+                    <Typography>
+                      <strong>الشاحن:</strong> {product.speed} watt
+                    </Typography>
+                  </Grid>
+                )}
               </Grid>
             </CardContent>
           </Card>
         </Grid>
+
+        {/*  الالوان والصورة */}
+        {product.colors && product.colors.length > 0 && (
+          <Grid item xs={12}>
+            <Typography
+              variant="h6"
+              gutterBottom
+              sx={{ fontWeight: "bold", mb: 2 }}
+            >
+              الألوان المتاحة:
+            </Typography>
+
+            {/* صورة اللون المختار - بوكس كبير أعلى الألوان */}
+            <Box
+              sx={{
+                textAlign: "center",
+                mb: 3,
+                p: 2,
+                backgroundColor: "#f9f9f9",
+                borderRadius: "12px",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                transition: "all 0.3s ease",
+                maxWidth: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <img
+                src={
+                  selectedColor?.images?.[0]?.image
+                    ? `${Images_URL}${selectedColor.images[0].image}`
+                    : product.image
+                    ? product.image.startsWith("http")
+                      ? product.image
+                      : `${Images_URL}${product.image}`
+                    : "/placeholder-image.png"
+                }
+                alt={`لون ${selectedColor?.color?.name || "المنتج"}`}
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: "350px",
+                  objectFit: "contain",
+                  borderRadius: "8px",
+                }}
+              />
+            </Box>
+
+            {/* قائمة الألوان */}
+            {product.colors?.length > 0 && (
+              <Box sx={{ mt: 4 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 2,
+                    justifyContent: "center",
+                  }}
+                >
+                  {product.colors.map((color) => (
+                    <Box
+                      key={color.id}
+                      sx={{
+                        position: "relative",
+                        cursor: "pointer",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        p: 1,
+                        border:
+                          selectedColor?.id === color.id
+                            ? "3px solid #1976d2"
+                            : "1px solid #ddd",
+                        borderRadius: "12px",
+                        transition: "all 0.3s ease",
+                        backgroundColor:
+                          selectedColor?.id === color.id ? "#f0f7ff" : "#fff",
+                        "&:hover": {
+                          transform: "translateY(-5px)",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                        },
+                      }}
+                      onClick={() => setSelectedColor(color)}
+                    >
+                      {/* زر الحذف */}
+                      <CloseIcon
+                        sx={{
+                          position: "absolute",
+                          top: -8,
+                          left: -8,
+                          color: "red",
+                          backgroundColor: "white",
+                          borderRadius: "50%",
+                          fontSize: "20px",
+                          zIndex: 1,
+                          "&:hover": {
+                            backgroundColor: "red",
+                            color: "white",
+                          },
+                        }}
+                        onClick={async (e) => {
+                          e.stopPropagation();
+
+                          if (
+                            window.confirm(`هل أنت متأكد من حذف هذا اللون؟`)
+                          ) {
+                            try {
+                              const token = localStorage.getItem("token");
+                              const response = await fetch(
+                                `http://localhost:8000/api/mobile-colors/${color.id}`,
+                                {
+                                  method: "DELETE",
+                                  headers: {
+                                    Authorization: `Bearer ${token}`,
+                                  },
+                                }
+                              );
+
+                              if (!response.ok) {
+                                throw new Error("فشل في حذف اللون");
+                              }
+
+                              setProduct((prev) => ({
+                                ...prev,
+                                colors: prev.colors.filter(
+                                  (c) => c.id !== color.id
+                                ),
+                              }));
+
+                              if (selectedColor?.id === color.id) {
+                                setSelectedColor(null);
+                              }
+
+                              alert("تم حذف اللون بنجاح");
+                            } catch (error) {
+                              console.error("Error deleting color:", error);
+                              alert(error.message || "حدث خطأ أثناء حذف اللون");
+                            }
+                          }
+                        }}
+                      />
+
+                      {selectedColor?.id === color.id && (
+                        <GridCheckCircleIcon
+                          sx={{
+                            position: "absolute",
+                            top: -8,
+                            right: -8,
+                            color: "#4caf50",
+                            backgroundColor: "white",
+                            borderRadius: "50%",
+                            fontSize: "24px",
+                          }}
+                        />
+                      )}
+
+                      <Box
+                        sx={{
+                          width: 80,
+                          height: 80,
+                          borderRadius: "50%",
+                          overflow: "hidden",
+                          border: "2px solid #fff",
+                          boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                          backgroundColor: color.color.hex_code.startsWith("#")
+                            ? color.color.hex_code
+                            : "#f5f5f5",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        {color.images?.[0]?.image ? (
+                          <img
+                            src={`${Images_URL}${color.images[0].image}`}
+                            alt={`لون ${color.color.name}`}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                              borderRadius: "50%",
+                            }}
+                          />
+                        ) : (
+                          <Box
+                            sx={{
+                              width: "100%",
+                              height: "100%",
+                              borderRadius: "50%",
+                              backgroundColor: color.color.hex_code.startsWith(
+                                "#"
+                              )
+                                ? color.color.hex_code
+                                : "#d9d9d9",
+                            }}
+                          />
+                        )}
+                      </Box>
+
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontWeight:
+                            selectedColor?.id === color.id ? "bold" : "normal",
+                          color:
+                            selectedColor?.id === color.id
+                              ? "primary.main"
+                              : "text.primary",
+                          mt: 1,
+                        }}
+                      >
+                        {color.color.name || `لون ${color.id.slice(0, 4)}`}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+            )}
+          </Grid>
+        )}
       </Grid>
 
       <Box display="flex" justifyContent="flex-end" mt={3}>

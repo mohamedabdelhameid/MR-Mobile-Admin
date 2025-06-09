@@ -9,12 +9,16 @@ import {
   CircularProgress,
   MenuItem,
   InputAdornment,
+  FormControl,
+  InputLabel,
+  Select,
 } from "@mui/material";
 import Header from "../components/Header";
 import { useParams, useNavigate } from "react-router-dom";
 
 const API_URL = "http://localhost:8000/api/accessories";
 const Images = "http://localhost:8000";
+const BRANDS_API_URL = "http://127.0.0.1:8000/api/brands";
 
 const UI_STATUS_OPTIONS = {
   active: "فعال",
@@ -31,6 +35,7 @@ const UpdateProd = () => {
     brand_id: "",
     description: "",
     battery: "",
+    speed: "",
     price: "",
     discount: "",
     stock_quantity: "",
@@ -46,6 +51,15 @@ const UpdateProd = () => {
   const [hasChanges, setHasChanges] = useState(false);
   const [initialProduct, setInitialProduct] = useState(null);
   const [serverErrors, setServerErrors] = useState([]);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [brandId, setBrandId] = useState("");
+  const [brands, setBrands] = useState([]);
 
   const normalizeStatusFromAPI = (apiStatus) => {
     const statusMap = {
@@ -64,6 +78,47 @@ const UpdateProd = () => {
     };
     return reverseMap[uiStatus] || "available";
   };
+
+  const showSnackbar = (message, severity) => {
+    setSnackbar({
+      open: true,
+      message,
+      severity,
+    });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      showSnackbar("يرجى تسجيل الدخول أولاً", "error");
+      window.location.href = "/login";
+      return;
+    }
+
+    const fetchBrands = async () => {
+      try {
+        const response = await fetch(BRANDS_API_URL, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) throw new Error("فشل في جلب البيانات");
+
+        const data = await response.json();
+        setBrands(data.data || data.brands || []);
+      } catch (error) {
+        console.error("Error:", error);
+        showSnackbar("حدث خطأ أثناء جلب الماركات", "error");
+      }
+    };
+
+    fetchBrands();
+  }, []);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -155,9 +210,9 @@ const UpdateProd = () => {
       "title",
       "brand_id",
       "description",
-      "battery",
       "price",
       "stock_quantity",
+      "color",
       "status",
     ];
 
@@ -182,6 +237,10 @@ const UpdateProd = () => {
 
     if (product.battery && (isNaN(product.battery) || product.battery < 0)) {
       newErrors.battery = "يجب أن تكون سعة البطارية رقم موجب";
+    }
+
+    if (product.speed && (isNaN(product.speed) || product.speed < 0)) {
+      newErrors.speed = "يجب أن تكون سرعة الشاحن رقم موجب";
     }
 
     if (
@@ -261,6 +320,8 @@ const UpdateProd = () => {
         requestBody.append("brand_id", product.brand_id);
         requestBody.append("description", product.description);
         requestBody.append("battery", product.battery);
+        requestBody.append("speed", product.speed);
+        requestBody.append("color", product.color);
         requestBody.append("price", product.price);
         requestBody.append("discount", product.discount);
         requestBody.append("stock_quantity", product.stock_quantity);
@@ -277,6 +338,8 @@ const UpdateProd = () => {
           brand_id: product.brand_id,
           description: product.description,
           battery: product.battery,
+          speed: product.speed,
+          color: product.color,
           price: product.price,
           discount: product.discount,
           stock_quantity: product.stock_quantity,
@@ -375,15 +438,27 @@ const UpdateProd = () => {
                   helperText={errors.title}
                   fullWidth
                 />
-                <TextField
-                  label="معرّف الماركة *"
-                  name="brand_id"
-                  value={product.brand_id}
-                  onChange={handleChange}
-                  error={!!errors.brand_id}
-                  helperText={errors.brand_id}
-                  fullWidth
-                />
+                <FormControl fullWidth error={!!errors.brand_id}>
+                  <InputLabel id="brand-label">الماركة *</InputLabel>
+                  <Select
+                    labelId="brand-label"
+                    name="brand_id"
+                    value={product.brand_id}
+                    label="الماركة *"
+                    onChange={handleChange}
+                  >
+                    {brands.map((brand) => (
+                      <MenuItem key={brand.id} value={brand.id}>
+                        {brand.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {errors.brand_id && (
+                    <span style={{ color: "red", fontSize: "0.75rem" }}>
+                      {errors.brand_id}
+                    </span>
+                  )}
+                </FormControl>
                 <TextField
                   label="السعر *"
                   name="price"
@@ -420,6 +495,15 @@ const UpdateProd = () => {
                   type="number"
                   error={!!errors.stock_quantity}
                   helperText={errors.stock_quantity}
+                  fullWidth
+                />
+                <TextField
+                  label="اللون *"
+                  name="color"
+                  value={product.color}
+                  onChange={handleChange}
+                  error={!!errors.color}
+                  helperText={errors.color}
                   fullWidth
                 />
                 <TextField
@@ -476,6 +560,15 @@ const UpdateProd = () => {
                   onChange={handleChange}
                   error={!!errors.battery}
                   helperText={errors.battery}
+                  fullWidth
+                />
+                <TextField
+                  label="سرعة الشاحن (mAh) *"
+                  name="speed"
+                  value={product.speed}
+                  onChange={handleChange}
+                  error={!!errors.speed}
+                  helperText={errors.speed}
                   fullWidth
                 />
               </Box>
