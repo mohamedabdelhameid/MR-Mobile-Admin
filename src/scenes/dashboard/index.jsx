@@ -4,6 +4,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import OrderTable from '../../orders/orderTable';
 import OrdersPage from '../../orders/orderTable';
 import StatisticsChart from '../../charts/graph';
+import BASE_BACKEND_URL from '../../API/config';
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
@@ -18,7 +19,8 @@ const Dashboard = () => {
       const token = localStorage.getItem("token");
       if (!token) throw new Error('يجب تسجيل الدخول أولاً');
 
-      const response = await fetch("http://localhost:8000/api/statistics", {
+      // const response = await fetch("http://localhost:8000/api/statistics", {
+      const response = await fetch(`${BASE_BACKEND_URL}/statistics`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 

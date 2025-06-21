@@ -17,11 +17,16 @@ import Header from "../components/Header";
 import "./AD.css";
 import CloseIcon from "@mui/icons-material/Close";
 import { GridCheckCircleIcon } from "@mui/x-data-grid";
+import BASE_BACKEND_LOCAHOST_URL from "../API/localhost";
+import BASE_BACKEND_URL from "../API/config";
 
-const API_URL = "http://127.0.0.1:8000/api/accessories";
-const Images_URL = "http://127.0.0.1:8000";
-const BRANDS_API_URL = "http://127.0.0.1:8000/api/brands";
-const COLORS_API_URL = "http://127.0.0.1:8000/api/accessory-colors";
+// const API_URL = "http://127.0.0.1:8000/api/accessories";
+// const BASE_BACKEND_LOCAHOST_URL = "http://127.0.0.1:8000";
+// const BRANDS_API_URL = "http://127.0.0.1:8000/api/brands";
+// const COLORS_API_URL = "http://127.0.0.1:8000/api/accessory-colors";
+const API_URL = `${BASE_BACKEND_URL}/accessories`;
+const BRANDS_API_URL = `${BASE_BACKEND_URL}/brands`;
+const COLORS_API_URL = `${BASE_BACKEND_URL}/accessory-colors`;
 
 const AccDetails = () => {
   const { id } = useParams();
@@ -153,7 +158,7 @@ const AccDetails = () => {
               src={
                 product.image.startsWith("http")
                   ? product.image
-                  : `${Images_URL}${product.image}`
+                  : `${BASE_BACKEND_LOCAHOST_URL}${product.image}`
               }
               alt={product.title}
               variant="rounded"
@@ -303,11 +308,11 @@ const AccDetails = () => {
               <img
                 src={
                   selectedColor?.images?.[0]?.image
-                    ? `${Images_URL}${selectedColor.images[0].image}`
+                    ? `${BASE_BACKEND_LOCAHOST_URL}${selectedColor.images[0].image}`
                     : product.image
                     ? product.image.startsWith("http")
                       ? product.image
-                      : `${Images_URL}${product.image}`
+                      : `${BASE_BACKEND_LOCAHOST_URL}${product.image}`
                     : "/placeholder-image.png"
                 }
                 alt={`لون ${selectedColor?.color?.name || "المنتج"}`}
@@ -381,7 +386,7 @@ const AccDetails = () => {
                             try {
                               const token = localStorage.getItem("token");
                               const response = await fetch(
-                                `http://localhost:8000/api/mobile-colors/${color.id}`,
+                                `${BASE_BACKEND_URL}/accessory-colors/${color.id}`,
                                 {
                                   method: "DELETE",
                                   headers: {
@@ -446,7 +451,7 @@ const AccDetails = () => {
                       >
                         {color.images?.[0]?.image ? (
                           <img
-                            src={`${Images_URL}${color.images[0].image}`}
+                            src={`${BASE_BACKEND_LOCAHOST_URL}${color.images[0].image}`}
                             alt={`لون ${color.color.name}`}
                             style={{
                               width: "100%",

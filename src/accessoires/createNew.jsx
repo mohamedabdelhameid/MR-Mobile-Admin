@@ -17,9 +17,12 @@ import {
 import Header from "../components/Header";
 import AddIcon from "@mui/icons-material/Add";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import BASE_BACKEND_URL from "../API/config";
 
-const API_URL = "http://127.0.0.1:8000/api/accessories";
-const BRANDS_API_URL = "http://127.0.0.1:8000/api/brands";
+// const API_URL = "http://127.0.0.1:8000/api/accessories";
+// const BRANDS_API_URL = "http://127.0.0.1:8000/api/brands";
+const API_URL = `${BASE_BACKEND_URL}/accessories`;
+const BRANDS_API_URL = `${BASE_BACKEND_URL}/brands`;
 
 const statusToAPI = {
   active: "available",

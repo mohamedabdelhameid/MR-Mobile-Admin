@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import BASE_BACKEND_LOCAHOST_URL from '../API/localhost';
+import BASE_BACKEND_URL from '../API/config';
 
 const OrderDetailsPage = () => {
   const { id } = useParams();
@@ -40,7 +42,7 @@ const OrderDetailsPage = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/api/orders/${id}`, {
+      const response = await fetch(`${BASE_BACKEND_URL}/orders/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -77,7 +79,8 @@ const OrderDetailsPage = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/api/orders/${id}`, {
+      // const response = await fetch(`http://localhost:8000/api/orders/${id}`, {
+      const response = await fetch(`${BASE_BACKEND_URL}/orders/${id}`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -193,7 +196,8 @@ const OrderDetailsPage = () => {
                 }</p>
                 <p><span className="font-medium">إثبات الدفع:</span> 
                   {order.payment_proof ? (
-                    <a href={`http://localhost:8000${order.payment_proof}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline ml-2">
+                    // <a href={`http://localhost:8000${order.payment_proof}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline ml-2">
+                    <a href={`${BASE_BACKEND_LOCAHOST_URL}${order.payment_proof}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline ml-2">
                       عرض الإثبات
                     </a>
                   ) : 'لا يوجد'}
@@ -223,7 +227,7 @@ const OrderDetailsPage = () => {
                     <tr key={item.id} className="border-t dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600">
                       <td className="py-3 px-4">
                         <img 
-                          src={`http://localhost:8000${item.product.image_cover || item.product.image}`} 
+                          src={`${BASE_BACKEND_LOCAHOST_URL}${item.product.image_cover || item.product.image}`} 
                           alt={item.product.title} 
                           className="w-16 h-16 object-cover rounded"
                           onError={(e) => {

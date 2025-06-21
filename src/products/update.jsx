@@ -15,10 +15,14 @@ import {
 } from "@mui/material";
 import Header from "../components/Header";
 import { useParams, useNavigate } from "react-router-dom";
+import BASE_BACKEND_URL from "../API/config";
+import BASE_BACKEND_LOCAHOST_URL from "../API/localhost";
 
-const API_URL = "http://127.0.0.1:8000/api/mobiles";
-const Images = "http://127.0.0.1:8000";
-const BRANDS_API_URL = "http://127.0.0.1:8000/api/brands";
+// const API_URL = "http://127.0.0.1:8000/api/mobiles";
+// const BASE_BACKEND_LOCAHOST_URL = "http://127.0.0.1:8000";
+// const BRANDS_API_URL = "http://127.0.0.1:8000/api/brands";
+const API_URL = `${BASE_BACKEND_URL}/mobiles`;
+const BRANDS_API_URL = `${BASE_BACKEND_URL}/brands`;
 
 const UI_STATUS_OPTIONS = {
   active: "فعال",
@@ -46,8 +50,8 @@ const UpdateProd = () => {
     camera: "",
     network_support: "",
     release_year: "",
-    total_quantity: "",
-    rating: "",
+    // total_quantity: "",
+    // rating: "",
     image_cover: "",
     status: "active",
   });
@@ -249,7 +253,7 @@ const UpdateProd = () => {
       "operating_system",
       "network_support",
       "release_year",
-      "total_quantity",
+      // "total_quantity",
       "status",
     ];
 
@@ -263,12 +267,12 @@ const UpdateProd = () => {
 
     if (!product.price || isNaN(product.price) || product.price < 0)
       newErrors.price = "السعر يجب أن يكون رقم موجب";
-    if (
-      !product.total_quantity ||
-      isNaN(product.total_quantity) ||
-      product.total_quantity < 0
-    )
-      newErrors.total_quantity = "الكمية يجب أن تكون رقم موجب";
+    // if (
+    //   !product.total_quantity ||
+    //   isNaN(product.total_quantity) ||
+    //   product.total_quantity < 0
+    // )
+    //   newErrors.total_quantity = "الكمية يجب أن تكون رقم موجب";
     if (
       !product.release_year ||
       isNaN(product.release_year) ||
@@ -483,7 +487,7 @@ const UpdateProd = () => {
                   }}
                   fullWidth
                 />
-                <TextField
+                {/* <TextField
                   label="الكمية المتاحة *"
                   name="total_quantity"
                   value={product.total_quantity}
@@ -492,7 +496,7 @@ const UpdateProd = () => {
                   error={!!errors.total_quantity}
                   helperText={errors.total_quantity}
                   fullWidth
-                />
+                /> */}
                 <TextField
                   label="الحالة *"
                   name="status"
@@ -613,7 +617,7 @@ const UpdateProd = () => {
                   helperText={errors.release_year}
                   fullWidth
                 />
-                <TextField
+                {/* <TextField
                   label="التقييم"
                   name="rating"
                   value={product.rating}
@@ -621,7 +625,7 @@ const UpdateProd = () => {
                   type="number"
                   inputProps={{ min: 0, max: 5, step: 0.1 }}
                   fullWidth
-                />
+                /> */}
               </Box>
             </CardContent>
           </Card>
@@ -639,7 +643,7 @@ const UpdateProd = () => {
                     src={
                       product.image_cover.startsWith("data:image")
                         ? product.image_cover
-                        : `${Images}${product.image_cover}`
+                        : `${BASE_BACKEND_LOCAHOST_URL}${product.image_cover}`
                     }
                     alt="Product Preview"
                     sx={{

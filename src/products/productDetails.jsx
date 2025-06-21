@@ -17,11 +17,16 @@ import Header from "../components/Header";
 import "./pd.css";
 import CloseIcon from "@mui/icons-material/Close";
 import { GridCheckCircleIcon } from "@mui/x-data-grid";
+import BASE_BACKEND_LOCAHOST_URL from '../API/localhost'
+import BASE_BACKEND_URL from "../API/config";
 
-const API_URL = "http://127.0.0.1:8000/api/mobiles";
-const Images_URL = "http://127.0.0.1:8000";
-const BRANDS_API_URL = "http://127.0.0.1:8000/api/brands";
-const COLORS_API_URL = "http://172.0.0.1:8000/api/mobile-colors";
+// const BASE_BACKEND_LOCAHOST_URL = "http://127.0.0.1:8000";
+// const API_URL = "http://127.0.0.1:8000/api/mobiles";
+// const BRANDS_API_URL = "http://127.0.0.1:8000/api/brands";
+// const COLORS_API_URL = "http://172.0.0.1:8000/api/mobile-colors";
+const API_URL = `${BASE_BACKEND_URL}/mobiles`;
+const BRANDS_API_URL = `${BASE_BACKEND_URL}/brands`;
+const COLORS_API_URL = `${BASE_BACKEND_URL}/mobile-colors`;
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -153,10 +158,10 @@ const ProductDetails = () => {
             <Avatar
               src={
                 selectedColor?.images?.[0]?.image
-                  ? `${Images_URL}${selectedColor.images[0].image}`
+                  ? `${BASE_BACKEND_LOCAHOST_URL}${selectedColor.images[0].image}`
                   : product.image_cover.startsWith("http")
                   ? product.image_cover
-                  : `${Images_URL}${product.image_cover}`
+                  : `${BASE_BACKEND_LOCAHOST_URL}${product.image_cover}`
               }
               alt={product.title}
               variant="rounded"
@@ -340,10 +345,10 @@ const ProductDetails = () => {
             <img
               src={
                 selectedColor?.images?.[0]?.image
-                  ? `${Images_URL}${selectedColor.images[0].image}`
+                  ? `${BASE_BACKEND_LOCAHOST_URL}${selectedColor.images[0].image}`
                   : product.image_cover.startsWith("http")
                   ? product.image_cover
-                  : `${Images_URL}${product.image_cover}`
+                  : `${BASE_BACKEND_LOCAHOST_URL}${product.image_cover}`
               }
               alt={`لون ${selectedColor?.color?.name || "المنتج"}`}
               style={{
@@ -414,7 +419,8 @@ const ProductDetails = () => {
                           try {
                             const token = localStorage.getItem("token");
                             const response = await fetch(
-                              `http://localhost:8000/api/mobile-colors/${color.id}`,
+                              // `http://localhost:8000/api/mobile-colors/${color.id}`,
+                              `${BASE_BACKEND_URL}/mobile-colors/${color.id}`,
                               {
                                 method: "DELETE",
                                 headers: {
@@ -479,7 +485,7 @@ const ProductDetails = () => {
                     >
                       {color.images?.[0]?.image ? (
                         <img
-                          src={`${Images_URL}${color.images[0].image}`}
+                          src={`${BASE_BACKEND_LOCAHOST_URL}${color.images[0].image}`}
                           alt={`لون ${color.color.name}`}
                           style={{
                             width: "100%",

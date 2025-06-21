@@ -21,6 +21,7 @@ import {
 } from '@mui/material';
 import { Delete, Edit, Add } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import BASE_BACKEND_URL from '../API/config';
 
 const ColorsList = () => {
   const [colors, setColors] = useState([]);
@@ -39,7 +40,8 @@ const ColorsList = () => {
 
   const navigate = useNavigate();
 
-  const API_URL = "http://127.0.0.1:8000/api/colors";
+  // const API_URL = "http://127.0.0.1:8000/api/colors";
+  const API_URL = `${BASE_BACKEND_URL}/colors`;
 
   useEffect(() => {
     const fetchColors = async () => {
@@ -145,7 +147,7 @@ const ColorsList = () => {
           <TableHead>
             <TableRow>
               <TableCell sx={{ fontWeight: 'bold' }}>#</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>اللون</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }} align="right">اللون</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>الاسم</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>كود اللون</TableCell>
               <TableCell sx={{ fontWeight: 'bold', textAlign: 'center' }}>الإجراءات</TableCell>

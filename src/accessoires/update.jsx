@@ -15,10 +15,13 @@ import {
 } from "@mui/material";
 import Header from "../components/Header";
 import { useParams, useNavigate } from "react-router-dom";
+import BASE_BACKEND_LOCAHOST_URL from "../API/localhost";
+import BASE_BACKEND_URL from "../API/config";
 
-const API_URL = "http://localhost:8000/api/accessories";
-const Images = "http://localhost:8000";
-const BRANDS_API_URL = "http://127.0.0.1:8000/api/brands";
+// const API_URL = "http://localhost:8000/api/accessories";
+// const BRANDS_API_URL = "http://127.0.0.1:8000/api/brands";
+const API_URL = `${BASE_BACKEND_URL}/accessories`;
+const BRANDS_API_URL = `${BASE_BACKEND_URL}/brands`;
 
 const UI_STATUS_OPTIONS = {
   active: "فعال",
@@ -38,7 +41,7 @@ const UpdateProd = () => {
     speed: "",
     price: "",
     discount: "",
-    stock_quantity: "",
+    // stock_quantity: "",
     rating: "",
     image: "",
     color: "",
@@ -211,8 +214,8 @@ const UpdateProd = () => {
       "brand_id",
       "description",
       "price",
-      "stock_quantity",
-      "color",
+      // "stock_quantity",
+      // "color",
       "status",
     ];
 
@@ -253,25 +256,12 @@ const UpdateProd = () => {
     if (
       product.discount &&
       (isNaN(product.discount) ||
-        product.discount < 0 ||
+        product.discount <= 0 ||
         product.discount > 100)
     ) {
       newErrors.discount = "يجب أن يكون الخصم بين 0 و 100";
     }
 
-    if (
-      product.stock_quantity &&
-      (isNaN(product.stock_quantity) || product.stock_quantity < 0)
-    ) {
-      newErrors.stock_quantity = "يجب أن تكون الكمية رقم موجب";
-    }
-
-    if (
-      product.rating &&
-      (isNaN(product.rating) || product.rating < 0 || product.rating > 5)
-    ) {
-      newErrors.rating = "يجب أن يكون التقييم بين 0 و 5";
-    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -324,7 +314,7 @@ const UpdateProd = () => {
         requestBody.append("color", product.color);
         requestBody.append("price", product.price);
         requestBody.append("discount", product.discount);
-        requestBody.append("stock_quantity", product.stock_quantity);
+        // requestBody.append("stock_quantity", product.stock_quantity);
         requestBody.append("rating", product.rating);
         requestBody.append("status", normalizeStatusForAPI(product.status));
         requestBody.append("image", imageFile);
@@ -342,7 +332,7 @@ const UpdateProd = () => {
           color: product.color,
           price: product.price,
           discount: product.discount,
-          stock_quantity: product.stock_quantity,
+          // stock_quantity: product.stock_quantity,
           rating: product.rating,
           status: normalizeStatusForAPI(product.status),
           _method: "PUT",
@@ -438,12 +428,12 @@ const UpdateProd = () => {
                   helperText={errors.title}
                   fullWidth
                 />
-                <FormControl fullWidth error={!!errors.brand_id}>
+                {/* <FormControl fullWidth error={!!errors.brand_id}>
                   <InputLabel id="brand-label">الماركة *</InputLabel>
                   <Select
                     labelId="brand-label"
                     name="brand_id"
-                    value={product.brand_id}
+                    value={product.brand.id}
                     label="الماركة *"
                     onChange={handleChange}
                   >
@@ -458,7 +448,35 @@ const UpdateProd = () => {
                       {errors.brand_id}
                     </span>
                   )}
+                </FormControl> */}
+
+                <FormControl fullWidth error={!!errors.brand_id}>
+                  <InputLabel id="brand-label">الماركة *</InputLabel>
+                  <Select
+                    labelId="brand-label"
+                    name="brand_id"
+                    value={product.brand_id}
+                    label="الماركة *"
+                    onChange={(e) =>
+                      setProduct((prev) => ({
+                        ...prev,
+                        brand_id: e.target.value,
+                      }))
+                    }
+                  >
+                    {brands.map((brand) => (
+                      <MenuItem key={brand.id} value={brand.id}>
+                        {brand.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {errors.brand_id && (
+                    <span style={{ color: "red", fontSize: "0.75rem" }}>
+                      {errors.brand_id}
+                    </span>
+                  )}
                 </FormControl>
+
                 <TextField
                   label="السعر *"
                   name="price"
@@ -487,7 +505,7 @@ const UpdateProd = () => {
                   }}
                   fullWidth
                 />
-                <TextField
+                {/* <TextField
                   label="الكمية المتاحة *"
                   name="stock_quantity"
                   value={product.stock_quantity}
@@ -496,8 +514,8 @@ const UpdateProd = () => {
                   error={!!errors.stock_quantity}
                   helperText={errors.stock_quantity}
                   fullWidth
-                />
-                <TextField
+                /> */}
+                {/* <TextField
                   label="اللون *"
                   name="color"
                   value={product.color}
@@ -505,7 +523,7 @@ const UpdateProd = () => {
                   error={!!errors.color}
                   helperText={errors.color}
                   fullWidth
-                />
+                /> */}
                 <TextField
                   label="الحالة *"
                   name="status"
@@ -587,7 +605,7 @@ const UpdateProd = () => {
                     src={
                       product.image.startsWith("data:image")
                         ? product.image
-                        : `${Images}${product.image}`
+                        : `${BASE_BACKEND_LOCAHOST_URL}${product.image}`
                     }
                     alt="Product Preview"
                     sx={{

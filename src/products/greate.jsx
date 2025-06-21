@@ -19,9 +19,12 @@ import InputLabel from "@mui/material/InputLabel";
 import FormControl from "@mui/material/FormControl";
 import InputAdornment from "@mui/material/InputAdornment";
 import { useNavigate } from "react-router-dom";
+import BASE_BACKEND_URL from "../API/config";
 
-const API_URL = "http://127.0.0.1:8000/api/mobiles";
-const BRANDS_API_URL = "http://127.0.0.1:8000/api/brands";
+// const API_URL = "http://127.0.0.1:8000/api/mobiles";
+// const BRANDS_API_URL = "http://127.0.0.1:8000/api/brands";
+const API_URL = `${BASE_BACKEND_URL}/mobiles`;
+const BRANDS_API_URL = `${BASE_BACKEND_URL}/brands`;
 
 const Create = () => {
   // States for form fields
@@ -39,10 +42,10 @@ const Create = () => {
   const [camera, setCamera] = useState("");
   const [networkSupport, setNetworkSupport] = useState("");
   const [releaseYear, setReleaseYear] = useState("");
-  const [stockQuantity, setStockQuantity] = useState("");
+  // const [stockQuantity, setStockQuantity] = useState("");
   const [imageCover, setImageCover] = useState(null);
   const [status, setStatus] = useState("available");
-  const [rating, setRating] = useState("");
+  // const [rating, setRating] = useState("");
   
   // Other states
   const [errors, setErrors] = useState({});
@@ -111,7 +114,7 @@ const Create = () => {
     if (!camera.trim()) newErrors.camera = "مواصفات الكاميرا مطلوبة";
     if (!networkSupport.trim()) newErrors.networkSupport = "دعم الشبكة مطلوب";
     if (!releaseYear) newErrors.releaseYear = "سنة الإصدار مطلوبة";
-    if (!stockQuantity) newErrors.stockQuantity = "الكمية المتاحة مطلوبة";
+    // if (!stockQuantity) newErrors.stockQuantity = "الكمية المتاحة مطلوبة";
     if (!imageCover) newErrors.imageCover = "صورة المنتج مطلوبة";
 
     setErrors(newErrors);
@@ -146,9 +149,9 @@ const Create = () => {
     setCamera("");
     setNetworkSupport("");
     setReleaseYear("");
-    setStockQuantity("");
+    // setStockQuantity("");
     setImageCover(null);
-    setRating("");
+    // setRating("");
     document.getElementById("image").style.display = "none";
   };
 
@@ -176,9 +179,9 @@ const Create = () => {
     formData.append('camera', camera);
     formData.append('network_support', networkSupport);
     formData.append('release_year', releaseYear);
-    formData.append('stock_quantity', stockQuantity);
+    // formData.append('stock_quantity', stockQuantity);
     formData.append('status', status);
-    formData.append('rating', rating || 0);
+    // formData.append('rating', rating || 0);
     
     if (imageCover) {
       formData.append('image_cover', imageCover);
@@ -429,7 +432,7 @@ const Create = () => {
               error={!!errors.releaseYear}
               helperText={errors.releaseYear}
             />
-            <TextField
+            {/* <TextField
               label="الكمية المتاحة *"
               variant="outlined"
               type="number"
@@ -437,15 +440,15 @@ const Create = () => {
               onChange={(e) => setStockQuantity(e.target.value)}
               error={!!errors.stockQuantity}
               helperText={errors.stockQuantity}
-            />
-            <TextField
+            /> */}
+            {/* <TextField
               label="التقييم"
               variant="outlined"
               type="number"
               value={rating}
               onChange={(e) => setRating(e.target.value)}
               inputProps={{ min: 0, max: 5, step: 0.1 }}
-            />
+            /> */}
           </Box>
         </AccordionDetails>
       </Accordion>

@@ -4,6 +4,7 @@ import loginPhoto from './Img/LoginPh.png';
 import welcomePhoto from './Img/correctData.png';
 import wrongPhoto from './Img/wrongData.png';
 import firstChance from './Img/firstChance.png';
+import BASE_BACKEND_URL from "../../API/config";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -33,7 +34,8 @@ const Login = () => {
 
     setValidationError(""); // مسح الأخطاء عند التحقق بنجاح
 
-    const response = await fetch("http://localhost:8000/api/admin/login", {
+    // const response = await fetch("http://localhost:8000/api/admin/login", {
+    const response = await fetch(`${BASE_BACKEND_URL}/admin/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),

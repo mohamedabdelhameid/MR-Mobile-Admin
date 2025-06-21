@@ -10,6 +10,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import BASE_BACKEND_URL from '../API/config';
 
 // Register ChartJS components
 ChartJS.register(
@@ -32,7 +33,8 @@ const StatisticsChart = () => {
 
     const fetchData = async () => {
       try {
-        const response = await fetch("http://localhost:8000/api/statistics", {
+        // const response = await fetch("http://localhost:8000/api/statistics", {
+        const response = await fetch(`${BASE_BACKEND_URL}/statistics`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,

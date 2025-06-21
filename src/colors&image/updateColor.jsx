@@ -9,6 +9,7 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
+import BASE_BACKEND_URL from "../API/config";
 
 const UpdateColor = () => {
   const { id } = useParams();
@@ -26,7 +27,8 @@ const UpdateColor = () => {
     severity: "success",
   });
 
-  const API_URL = "http://127.0.0.1:8000/api/colors";
+  // const API_URL = "http://127.0.0.1:8000/api/colors";
+  const API_URL = `${BASE_BACKEND_URL}/colors`;
 
   const handleUpdate = async (e) => {
     e.preventDefault();

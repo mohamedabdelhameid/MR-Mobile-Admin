@@ -11,6 +11,7 @@ import {
   Alert
 } from "@mui/material";
 import { CloudUpload as CloudUploadIcon } from "@mui/icons-material";
+import BASE_BACKEND_URL from "../API/config";
 
 const UpdateBrand = () => {
   const { id } = useParams();
@@ -29,7 +30,8 @@ const UpdateBrand = () => {
     severity: 'success'
   });
 
-  const API_URL = "http://127.0.0.1:8000/api/brands";
+  // const API_URL = "http://127.0.0.1:8000/api/brands";
+  const API_URL = `${BASE_BACKEND_URL}/brands`;
 
   useEffect(() => {
     const fetchBrand = async () => {

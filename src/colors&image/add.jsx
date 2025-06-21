@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Button, TextField, Box, Snackbar, Alert } from "@mui/material";
+import BASE_BACKEND_URL from "../API/config";
 
-const COLORS_API_URL = "http://127.0.0.1:8000/api/colors";
+// const COLORS_API_URL = "http://127.0.0.1:8000/api/colors";
+const COLORS_API_URL = `${BASE_BACKEND_URL}/colors`;
 
 const ADDcolor = () => {
   const [color, setColor] = useState({

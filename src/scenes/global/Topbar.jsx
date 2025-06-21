@@ -7,6 +7,7 @@ import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
 import { useNavigate } from "react-router-dom";
 import { CarpenterTwoTone, ShoppingCart } from "@mui/icons-material";
+import BASE_BACKEND_URL from "../../API/config";
 
 const Topbar = () => {
   const theme = useTheme();
@@ -19,7 +20,8 @@ const Topbar = () => {
   // دالة لجلب عدد الرسائل من API
   const fetchMessageCount = async () => {
     try {
-      const response = await fetch("http://localhost:8000/api/contact-us", {
+      // const response = await fetch("http://localhost:8000/api/contact-us", {
+      const response = await fetch(`${BASE_BACKEND_URL}/contact-us`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
           "Content-Type": "application/json",

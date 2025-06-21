@@ -1,147 +1,3 @@
-// import { useState, useEffect } from "react";
-// import {
-//   Button,
-//   TextField,
-//   Box,
-//   Snackbar,
-//   Alert,
-//   MenuItem,
-//   Select,
-//   InputLabel,
-//   FormControl,
-// } from "@mui/material";
-
-// const UPLOAD_IMAGE_API_URL = "http://127.0.0.1:8000/api/mobile-images";
-// const COLORS_API_URL = "http://127.0.0.1:8000/api/colors";
-
-// const AddColorImage = () => {
-//   const [colorId, setColorId] = useState("");
-//   const [imageFile, setImageFile] = useState(null);
-//   const [colors, setColors] = useState([]);
-//   const [snackbar, setSnackbar] = useState({
-//     open: false,
-//     message: "",
-//     severity: "success",
-//   });
-
-//   useEffect(() => {
-//     // جلب قائمة الألوان من API عشان نعرضها في الاختيار
-//     const fetchColors = async () => {
-//       try {
-//         const res = await fetch(COLORS_API_URL, {
-//           headers: {
-//             Authorization: `Bearer ${localStorage.getItem("token")}`,
-//           },
-//         });
-//         const data = await res.json();
-//         if (Array.isArray(data)) {
-//           setColors(data);
-//         } else if (Array.isArray(data.colors)) {
-//           setColors(data.colors);
-//         } else {
-//           throw new Error("البيانات غير صالحة");
-//         }
-//       } catch (error) {
-//         showMessage(error.message, "error");
-//       }
-//     };
-
-//     fetchColors();
-//   }, []);
-
-//   const handleSubmit = async () => {
-//     if (!colorId) {
-//       showMessage("يجب اختيار اللون", "error");
-//       return;
-//     }
-//     if (!imageFile) {
-//       showMessage("يجب اختيار صورة", "error");
-//       return;
-//     }
-
-//     try {
-//       const formData = new FormData();
-//       formData.append("mobile_color_variant_id", colorId);
-//       formData.append("image", imageFile);
-
-//       const response = await fetch(UPLOAD_IMAGE_API_URL, {
-//         method: "POST",
-//         headers: {
-//           Authorization: `Bearer ${localStorage.getItem("token")}`,
-//         },
-//         body: formData,
-//       });
-
-//       if (!response.ok) {
-//         const data = await response.json();
-//         throw new Error(data.message || "فشل في رفع الصورة");
-//       }
-
-//       showMessage("تم رفع الصورة بنجاح", "success");
-//       setColorId("");
-//       setImageFile(null);
-//     } catch (error) {
-//       showMessage(error.message, "error");
-//     }
-//   };
-
-//   const showMessage = (message, severity) => {
-//     setSnackbar({ open: true, message, severity });
-//   };
-
-//   return (
-//     <Box sx={{ p: 3, maxWidth: 500, width: "100%", margin: "auto", mt: 5 }}>
-//       <FormControl fullWidth sx={{ mb: 2 }}>
-//         <InputLabel id="color-select-label">اختر اللون</InputLabel>
-//         <Select
-//           labelId="color-select-label"
-//           value={colorId}
-//           label="اختر اللون"
-//           onChange={(e) => setColorId(e.target.value)}
-//         >
-//           {colors.map((color) => (
-//             <MenuItem key={color.id} value={color.id}>
-//               {color.name}
-//             </MenuItem>
-//           ))}
-//         </Select>
-//       </FormControl>
-
-//       <Box sx={{ mb: 2 }}>
-//         <input
-//           type="file"
-//           accept="image/*"
-//           onChange={(e) => setImageFile(e.target.files[0])}
-//           style={{ width: "100%" }}
-//         />
-//       </Box>
-
-//       <Button
-//         variant="contained"
-//         onClick={handleSubmit}
-//         fullWidth
-//         size="large"
-//         disabled={!colorId || !imageFile}
-//       >
-//         رفع صورة اللون
-//       </Button>
-
-//       <Snackbar
-//         open={snackbar.open}
-//         autoHideDuration={6000}
-//         onClose={() => setSnackbar({ ...snackbar, open: false })}
-//       >
-//         <Alert severity={snackbar.severity}>{snackbar.message}</Alert>
-//       </Snackbar>
-//     </Box>
-//   );
-// };
-
-// export default AddColorImage;
-
-
-
-
 import { useState, useEffect } from "react";
 import {
   Button,
@@ -153,9 +9,12 @@ import {
   InputLabel,
   FormControl,
 } from "@mui/material";
+import BASE_BACKEND_URL from "../API/config";
 
-const UPLOAD_IMAGE_API_URL = "http://127.0.0.1:8000/api/mobile-images";
-const MOBILES_API_URL = "http://127.0.0.1:8000/api/mobiles";
+// const UPLOAD_IMAGE_API_URL = "http://127.0.0.1:8000/api/mobile-images";
+// const MOBILES_API_URL = "http://127.0.0.1:8000/api/mobiles";
+const UPLOAD_IMAGE_API_URL = `${BASE_BACKEND_URL}/mobile-images`;
+const MOBILES_API_URL = `${BASE_BACKEND_URL}/mobiles`;
 
 const AddColorImage = () => {
   const [mobiles, setMobiles] = useState([]);
