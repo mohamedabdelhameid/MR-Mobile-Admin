@@ -11,13 +11,22 @@ import {
   Divider,
   Grid,
   Paper,
+  Avatar,
 } from "@mui/material";
 import Header from "../components/Header";
 import "./AD.css";
+import CloseIcon from "@mui/icons-material/Close";
+import { GridCheckCircleIcon } from "@mui/x-data-grid";
+import BASE_BACKEND_LOCAHOST_URL from "../API/localhost";
+import BASE_BACKEND_URL from "../API/config";
 
-const API_URL = "http://127.0.0.1:8000/api/accessories";
-const Images_URL = "http://127.0.0.1:8000";
-const BRANDS_API_URL = "http://127.0.0.1:8000/api/brands";
+// const API_URL = "http://127.0.0.1:8000/api/accessories";
+// const BASE_BACKEND_LOCAHOST_URL = "http://127.0.0.1:8000";
+// const BRANDS_API_URL = "http://127.0.0.1:8000/api/brands";
+// const COLORS_API_URL = "http://127.0.0.1:8000/api/accessory-colors";
+const API_URL = `${BASE_BACKEND_URL}/accessories`;
+const BRANDS_API_URL = `${BASE_BACKEND_URL}/brands`;
+const COLORS_API_URL = `${BASE_BACKEND_URL}/accessory-colors`;
 
 const AccDetails = () => {
   const { id } = useParams();
@@ -26,47 +35,52 @@ const AccDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedColor, setSelectedColor] = useState(null);
   const [brands, setBrands] = useState([]);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  const showSnackbar = (message, severity) => {
+    setSnackbar({
+      open: true,
+      message,
+      severity,
+    });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
 
-    const fetchData = async () => {
+    const fetchProductDetails = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const [productResponse, brandsResponse] = await Promise.all([
-          fetch(`${API_URL}/${id}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: "application/json",
-            },
-          }),
-          fetch(BRANDS_API_URL, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: "application/json",
-            },
-          }),
-        ]);
+        const response = await fetch(`${API_URL}/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+        });
 
-        if (!productResponse.ok) throw new Error("فشل في جلب بيانات المنتج");
-        const productData = await productResponse.json();
+        if (!response.ok) {
+          throw new Error("فشل في جلب بيانات المنتج");
+        }
 
-        if (!brandsResponse.ok) throw new Error("فشل في جلب بيانات الماركات");
-        const brandsData = await brandsResponse.json();
-
-        let processedBrands = [];
-        if (Array.isArray(brandsData)) processedBrands = brandsData;
-        else if (brandsData?.data) processedBrands = brandsData.data;
-        else if (brandsData?.brands) processedBrands = brandsData.brands;
-
-        setProduct(productData.data || productData);
-        setBrands(processedBrands);
+        const { data } = await response.json();
+        setProduct(data);
       } catch (err) {
         setError(err.message);
-        if (err.message.includes("انتهت جلستك") || err.message.includes("غير مصرح")) {
+        console.error("Error:", err);
+
+        if (err.message.includes("انتهت جلستك")) {
           navigate("/login");
         }
       } finally {
@@ -74,18 +88,61 @@ const AccDetails = () => {
       }
     };
 
-    fetchData();
+    fetchProductDetails();
   }, [id, navigate]);
 
-  const getBrandName = (brandId) => {
-    if (!brandId) return "غير محدد";
-    const brand = brands.find((b) => b.id === brandId);
-    return brand?.name || "غير معروف";
-  };
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      showSnackbar("يرجى تسجيل الدخول أولاً", "error");
+      window.location.href = "/login";
+      return;
+    }
 
-  if (loading) return <CircularProgress sx={{ display: 'block', mx: 'auto', mt: 4 }} />;
-  if (error) return <Typography color="error" sx={{ textAlign: 'center', mt: 4 }}>{error}</Typography>;
-  if (!product) return <Typography sx={{ textAlign: 'center', mt: 4 }}>المنتج غير موجود</Typography>;
+    const fetchBrands = async () => {
+      try {
+        const response = await fetch(BRANDS_API_URL, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) throw new Error("فشل في جلب البيانات");
+
+        const data = await response.json();
+        setBrands(data.data || data.brands || []);
+      } catch (error) {
+        console.error("Error:", error);
+        showSnackbar("حدث خطأ أثناء جلب الماركات", "error");
+      }
+    };
+
+    fetchBrands();
+  }, []);
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" mt={4}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box display="flex" justifyContent="center" mt={4}>
+        <Typography color="error">{error}</Typography>
+      </Box>
+    );
+  }
+
+  if (!product) {
+    return (
+      <Box display="flex" justifyContent="center" mt={4}>
+        <Typography>المنتج غير موجود</Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box m="20px">
@@ -97,14 +154,19 @@ const AccDetails = () => {
         {/* الصورة */}
         <Grid item xs={12} md={6}>
           <Paper elevation={3} sx={{ p: 2, textAlign: "center" }}>
-            <img
-              src={`${Images_URL}${product.image}`}
+            <Avatar
+              src={
+                product.image.startsWith("http")
+                  ? product.image
+                  : `${BASE_BACKEND_LOCAHOST_URL}${product.image}`
+              }
               alt={product.title}
-              style={{
+              variant="rounded"
+              sx={{
                 width: "100%",
                 height: "auto",
-                maxWidth: "300px",
-                borderRadius: "8px",
+                maxHeight: 400,
+                borderRadius: 2,
               }}
             />
           </Paper>
@@ -119,31 +181,42 @@ const AccDetails = () => {
               </Typography>
 
               <Box display="flex" alignItems="center" mb={2}>
-                {product.discount > 0 ? (
-                  <>
-                    <Typography variant="h3" color="primary">
-                      {Math.round(product.price * (1 - product.discount/100))} ج.م
-                    </Typography>
-                    <Typography
-                      sx={{ ml: 1, textDecoration: "line-through" }}
-                      color="text.secondary"
-                    >
-                      {product.price} ج.م
-                    </Typography>
-                  </>
-                ) : (
+                {product.discount > 0 && (
+                  <Typography variant="h3">
+                    {Number(product.price) -
+                      Number(product.price * product.discount) / 100}{" "}
+                    ج.م
+                  </Typography>
+                )}
+              </Box>
+
+              <Box display="flex" alignItems="center" mb={2}>
+                {product.discount === 0 ? (
                   <Typography variant="h3">{product.price} ج.م</Typography>
+                ) : (
+                  <Typography
+                    sx={{ ml: 1, textDecoration: "line-through" }}
+                    color="text.secondary"
+                  >
+                    {product.price} ج.م
+                  </Typography>
                 )}
               </Box>
 
               <Chip
                 label={
-                  product.status === "available" ? "متاح" :
-                  product.status === "unavailable" ? "غير متاح" : "نفذ من المخزون"
+                  product.status === "available"
+                    ? "متاح"
+                    : product.status === "unavailable"
+                    ? "غير متاح"
+                    : "نفذ من المخزون"
                 }
                 color={
-                  product.status === "available" ? "success" :
-                  product.status === "unavailable" ? "warning" : "error"
+                  product.status === "available"
+                    ? "success"
+                    : product.status === "unavailable"
+                    ? "warning"
+                    : "error"
                 }
                 sx={{ mb: 2 }}
               />
@@ -157,21 +230,22 @@ const AccDetails = () => {
               <Grid container spacing={2}>
                 <Grid item xs={6}>
                   <Typography variant="subtitle1">
-                    <strong>الماركة:</strong> {getBrandName(product.brand_id)}
+                    <strong>الماركة: </strong>
+                    {product.brand?.name ||
+                      brands.find((b) => b.id === product.brand_id)?.name ||
+                      "غير معروف"}
                   </Typography>
                 </Grid>
                 <Grid item xs={6}>
                   <Typography variant="subtitle1">
-                    <strong>الكمية:</strong> {product.stock_quantity}
+                    <strong>الكمية المتاحة:</strong> {product.total_quantity}
                   </Typography>
                 </Grid>
-                {product.discount > 0 && (
-                  <Grid item xs={6}>
-                    <Typography variant="subtitle1">
-                      <strong>الخصم:</strong> {product.discount}%
-                    </Typography>
-                  </Grid>
-                )}
+                <Grid item xs={6}>
+                  <Typography variant="subtitle1">
+                    <strong>الخصم:</strong> {product.discount}%
+                  </Typography>
+                </Grid>
               </Grid>
             </CardContent>
           </Card>
@@ -185,41 +259,17 @@ const AccDetails = () => {
                 المواصفات الفنية
               </Typography>
               <Grid container spacing={2}>
-                {/* عرض سعة البطارية فقط إذا كانت موجودة */}
                 {product.battery && (
                   <Grid item xs={12} sm={6} md={4}>
                     <Typography>
-                      <strong>سعة البطارية:</strong> {product.battery} mAh
+                      <strong>البطارية:</strong> {product.battery} mAh
                     </Typography>
                   </Grid>
                 )}
-
-                {/* عرض سرعة الشاحن فقط إذا كانت موجودة */}
                 {product.speed && (
                   <Grid item xs={12} sm={6} md={4}>
                     <Typography>
-                      <strong>سرعة الشاحن:</strong> {product.speed} واط
-                    </Typography>
-                  </Grid>
-                )}
-
-                {/* عرض اللون إذا كان موجودًا */}
-                {product.color && (
-                  <Grid item xs={12} sm={6} md={4}>
-                    <Typography>
-                      <strong>اللون:</strong> 
-                      <span 
-                        style={{
-                          display: 'inline-block',
-                          width: '15px',
-                          height: '15px',
-                          backgroundColor: product.color,
-                          marginRight: '5px',
-                          verticalAlign: 'middle',
-                          border: '1px solid #ddd'
-                        }}
-                      />
-                      {product.color}
+                      <strong>الشاحن:</strong> {product.speed} watt
                     </Typography>
                   </Grid>
                 )}
@@ -227,13 +277,235 @@ const AccDetails = () => {
             </CardContent>
           </Card>
         </Grid>
+
+        {/*  الالوان والصورة */}
+        {product.colors && product.colors.length > 0 && (
+          <Grid item xs={12}>
+            <Typography
+              variant="h6"
+              gutterBottom
+              sx={{ fontWeight: "bold", mb: 2 }}
+            >
+              الألوان المتاحة:
+            </Typography>
+
+            {/* صورة اللون المختار - بوكس كبير أعلى الألوان */}
+            <Box
+              sx={{
+                textAlign: "center",
+                mb: 3,
+                p: 2,
+                backgroundColor: "#f9f9f9",
+                borderRadius: "12px",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                transition: "all 0.3s ease",
+                maxWidth: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <img
+                src={
+                  selectedColor?.images?.[0]?.image
+                    ? `${BASE_BACKEND_LOCAHOST_URL}${selectedColor.images[0].image}`
+                    : product.image
+                    ? product.image.startsWith("http")
+                      ? product.image
+                      : `${BASE_BACKEND_LOCAHOST_URL}${product.image}`
+                    : "/placeholder-image.png"
+                }
+                alt={`لون ${selectedColor?.color?.name || "المنتج"}`}
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: "350px",
+                  objectFit: "contain",
+                  borderRadius: "8px",
+                }}
+              />
+            </Box>
+
+            {/* قائمة الألوان */}
+            {product.colors?.length > 0 && (
+              <Box sx={{ mt: 4 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 2,
+                    justifyContent: "center",
+                  }}
+                >
+                  {product.colors.map((color) => (
+                    <Box
+                      key={color.id}
+                      sx={{
+                        position: "relative",
+                        cursor: "pointer",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        p: 1,
+                        border:
+                          selectedColor?.id === color.id
+                            ? "3px solid #1976d2"
+                            : "1px solid #ddd",
+                        borderRadius: "12px",
+                        transition: "all 0.3s ease",
+                        backgroundColor:
+                          selectedColor?.id === color.id ? "#f0f7ff" : "#fff",
+                        "&:hover": {
+                          transform: "translateY(-5px)",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                        },
+                      }}
+                      onClick={() => setSelectedColor(color)}
+                    >
+                      {/* زر الحذف */}
+                      <CloseIcon
+                        sx={{
+                          position: "absolute",
+                          top: -8,
+                          left: -8,
+                          color: "red",
+                          backgroundColor: "white",
+                          borderRadius: "50%",
+                          fontSize: "20px",
+                          zIndex: 1,
+                          "&:hover": {
+                            backgroundColor: "red",
+                            color: "white",
+                          },
+                        }}
+                        onClick={async (e) => {
+                          e.stopPropagation();
+
+                          if (
+                            window.confirm(`هل أنت متأكد من حذف هذا اللون؟`)
+                          ) {
+                            try {
+                              const token = localStorage.getItem("token");
+                              const response = await fetch(
+                                `${BASE_BACKEND_URL}/accessory-colors/${color.id}`,
+                                {
+                                  method: "DELETE",
+                                  headers: {
+                                    Authorization: `Bearer ${token}`,
+                                  },
+                                }
+                              );
+
+                              if (!response.ok) {
+                                throw new Error("فشل في حذف اللون");
+                              }
+
+                              setProduct((prev) => ({
+                                ...prev,
+                                colors: prev.colors.filter(
+                                  (c) => c.id !== color.id
+                                ),
+                              }));
+
+                              if (selectedColor?.id === color.id) {
+                                setSelectedColor(null);
+                              }
+
+                              alert("تم حذف اللون بنجاح");
+                            } catch (error) {
+                              console.error("Error deleting color:", error);
+                              alert(error.message || "حدث خطأ أثناء حذف اللون");
+                            }
+                          }
+                        }}
+                      />
+
+                      {selectedColor?.id === color.id && (
+                        <GridCheckCircleIcon
+                          sx={{
+                            position: "absolute",
+                            top: -8,
+                            right: -8,
+                            color: "#4caf50",
+                            backgroundColor: "white",
+                            borderRadius: "50%",
+                            fontSize: "24px",
+                          }}
+                        />
+                      )}
+
+                      <Box
+                        sx={{
+                          width: 80,
+                          height: 80,
+                          borderRadius: "50%",
+                          overflow: "hidden",
+                          border: "2px solid #fff",
+                          boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                          backgroundColor: color.color.hex_code.startsWith("#")
+                            ? color.color.hex_code
+                            : "#f5f5f5",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        {color.images?.[0]?.image ? (
+                          <img
+                            src={`${BASE_BACKEND_LOCAHOST_URL}${color.images[0].image}`}
+                            alt={`لون ${color.color.name}`}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                              borderRadius: "50%",
+                            }}
+                          />
+                        ) : (
+                          <Box
+                            sx={{
+                              width: "100%",
+                              height: "100%",
+                              borderRadius: "50%",
+                              backgroundColor: color.color.hex_code.startsWith(
+                                "#"
+                              )
+                                ? color.color.hex_code
+                                : "#d9d9d9",
+                            }}
+                          />
+                        )}
+                      </Box>
+
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontWeight:
+                            selectedColor?.id === color.id ? "bold" : "normal",
+                          color:
+                            selectedColor?.id === color.id
+                              ? "primary.main"
+                              : "text.primary",
+                          mt: 1,
+                        }}
+                      >
+                        {color.color.name || `لون ${color.id.slice(0, 4)}`}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+            )}
+          </Grid>
+        )}
       </Grid>
 
       <Box display="flex" justifyContent="flex-end" mt={3}>
         <Button
           variant="contained"
           color="primary"
-          onClick={() => navigate(`/Updteacc/${product.id}`, { state: product })}
+          onClick={() =>
+            navigate(`/Updteacc/${product.id}`, { state: product })
+          }
           sx={{ mr: 2 }}
         >
           تعديل المنتج
@@ -247,18 +519,29 @@ const AccDetails = () => {
               setIsDeleting(true);
               try {
                 const token = localStorage.getItem("token");
+                if (!token) {
+                  navigate("/login");
+                  return;
+                }
+
                 const response = await fetch(`${API_URL}/${id}`, {
                   method: "DELETE",
                   headers: {
                     Authorization: `Bearer ${token}`,
                     Accept: "application/json",
+                    "Content-Type": "application/json",
                   },
                 });
 
-                if (!response.ok) throw new Error("فشل في حذف المنتج");
+                if (!response.ok) {
+                  const errorData = await response.json();
+                  throw new Error(errorData.message || "فشل في حذف المنتج");
+                }
+
                 alert("تم حذف المنتج بنجاح");
                 navigate("/products");
               } catch (error) {
+                console.error("Error deleting product:", error);
                 alert(error.message || "حدث خطأ أثناء حذف المنتج");
               } finally {
                 setIsDeleting(false);

@@ -9,12 +9,20 @@ import {
   CircularProgress,
   MenuItem,
   InputAdornment,
+  Select,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import Header from "../components/Header";
 import { useParams, useNavigate } from "react-router-dom";
+import BASE_BACKEND_URL from "../API/config";
+import BASE_BACKEND_LOCAHOST_URL from "../API/localhost";
 
-const API_URL = "http://127.0.0.1:8000/api/mobiles";
-const Images = "http://127.0.0.1:8000";
+// const API_URL = "http://127.0.0.1:8000/api/mobiles";
+// const BASE_BACKEND_LOCAHOST_URL = "http://127.0.0.1:8000";
+// const BRANDS_API_URL = "http://127.0.0.1:8000/api/brands";
+const API_URL = `${BASE_BACKEND_URL}/mobiles`;
+const BRANDS_API_URL = `${BASE_BACKEND_URL}/brands`;
 
 const UI_STATUS_OPTIONS = {
   active: "فعال",
@@ -42,8 +50,8 @@ const UpdateProd = () => {
     camera: "",
     network_support: "",
     release_year: "",
-    stock_quantity: "",
-    rating: "",
+    // total_quantity: "",
+    // rating: "",
     image_cover: "",
     status: "active",
   });
@@ -54,6 +62,92 @@ const UpdateProd = () => {
   const [hasChanges, setHasChanges] = useState(false);
   const [initialProduct, setInitialProduct] = useState(null);
   const [serverErrors, setServerErrors] = useState([]);
+  const [brandId, setBrandId] = useState("");
+  const [brands, setBrands] = useState([]);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const showSnackbar = (message, severity) => {
+    setSnackbar({
+      open: true,
+      message,
+      severity,
+    });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      showSnackbar("يرجى تسجيل الدخول أولاً", "error");
+      window.location.href = "/login";
+      return;
+    }
+
+    const fetchBrands = async () => {
+      try {
+        const response = await fetch(BRANDS_API_URL, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) throw new Error("فشل في جلب البيانات");
+
+        const data = await response.json();
+        setBrands(data.data || data.brands || []);
+      } catch (error) {
+        console.error("Error:", error);
+        showSnackbar("حدث خطأ أثناء جلب الماركات", "error");
+      }
+    };
+
+    fetchBrands();
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    const fetchProductDetails = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await fetch(`${API_URL}/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("فشل في جلب بيانات المنتج");
+        }
+
+        const { data } = await response.json();
+        setProduct(data);
+      } catch (err) {
+        setError(err.message);
+        console.error("Error:", err);
+
+        if (err.message.includes("انتهت جلستك")) {
+          navigate("/login");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProductDetails();
+  }, [id, navigate]);
 
   // دالة لتحويل القيمة من API إلى قيمة متوافقة مع الواجهة
   const normalizeStatusFromAPI = (apiStatus) => {
@@ -85,6 +179,7 @@ const UpdateProd = () => {
           const normalizedData = {
             ...data.data,
             status: normalizeStatusFromAPI(data.data.status),
+                      brand_id: data.data.brand?.id || "",  // <== هذا السطر أضفته
           };
           setProduct(normalizedData);
           setInitialProduct(normalizedData);
@@ -119,8 +214,14 @@ const UpdateProd = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (!file.type.match("image.*")) {
-      alert("الرجاء اختيار ملف صورة فقط (JPEG, PNG, etc.)");
+    const validImageTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+    ];
+    if (!validImageTypes.includes(file.type)) {
+      alert("الرجاء اختيار ملف صورة فقط (JPEG, PNG, GIF, WebP)");
       return;
     }
 
@@ -132,11 +233,12 @@ const UpdateProd = () => {
     setImageFile(file);
     const reader = new FileReader();
     reader.onloadend = () => {
-      setProduct((prev) => ({ ...prev, image_cover: reader.result }));
+      setProduct((prev) => ({ ...prev, image: reader.result }));
     };
     reader.readAsDataURL(file);
     setHasChanges(true);
   };
+
 
   const validateForm = () => {
     const requiredFields = [
@@ -151,7 +253,7 @@ const UpdateProd = () => {
       "operating_system",
       "network_support",
       "release_year",
-      "stock_quantity",
+      // "total_quantity",
       "status",
     ];
 
@@ -165,12 +267,12 @@ const UpdateProd = () => {
 
     if (!product.price || isNaN(product.price) || product.price < 0)
       newErrors.price = "السعر يجب أن يكون رقم موجب";
-    if (
-      !product.stock_quantity ||
-      isNaN(product.stock_quantity) ||
-      product.stock_quantity < 0
-    )
-      newErrors.stock_quantity = "الكمية يجب أن تكون رقم موجب";
+    // if (
+    //   !product.total_quantity ||
+    //   isNaN(product.total_quantity) ||
+    //   product.total_quantity < 0
+    // )
+    //   newErrors.total_quantity = "الكمية يجب أن تكون رقم موجب";
     if (
       !product.release_year ||
       isNaN(product.release_year) ||
@@ -205,7 +307,6 @@ const UpdateProd = () => {
         return;
       }
 
-      // 1. إنشاء FormData
       const formData = new FormData();
 
       // 2. إضافة جميع الحقول
@@ -215,16 +316,19 @@ const UpdateProd = () => {
         _method: "PUT", // هذا مهم للخوادم التي لا تدعم PUT مباشرة
       };
 
+
+
       Object.entries(productToSend).forEach(([key, value]) => {
         if (value !== null && value !== undefined) {
           formData.append(key, value);
         }
       });
-
-      // 3. إضافة الصورة إذا كانت موجودة
+      
+      // حط الصورة بعدين (لو فيه صورة)
       if (imageFile) {
         formData.append("image_cover", imageFile);
       }
+      
 
       // const formData = new FormData();
 
@@ -272,7 +376,11 @@ const UpdateProd = () => {
     <Box m="20px">
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Header title="تحديث المنتج" subtitle="قم بتحديث بيانات المنتج" />
-        <Button variant="outlined" onClick={handleCancel}>
+        <Button
+          variant="outlined"
+          onClick={handleCancel}
+          style={{ borderColor: "green", color: "green" }}
+        >
           رجوع
         </Button>
       </Box>
@@ -291,7 +399,9 @@ const UpdateProd = () => {
                 </Typography>
                 <ul>
                   {serverErrors.map((err, i) => (
-                    <li style={{direction:'ltr',listStyle:"none"}} key={i}>{err}</li>
+                    <li style={{ direction: "ltr", listStyle: "none" }} key={i}>
+                      {err}
+                    </li>
                   ))}
                 </ul>
               </CardContent>
@@ -318,15 +428,28 @@ const UpdateProd = () => {
                   helperText={errors.title}
                   fullWidth
                 />
-                <TextField
-                  label="معرّف الماركة *"
-                  name="brand_id"
-                  value={product.brand_id}
-                  onChange={handleChange}
-                  error={!!errors.brand_id}
-                  helperText={errors.brand_id}
-                  fullWidth
-                />
+                <FormControl fullWidth error={!!errors.brand_id}>
+                  <InputLabel id="brand-label">الماركة *</InputLabel>
+                  <Select
+                    labelId="brand-label"
+                    name="brand_id"
+                    value={product.brand_id}
+                    label="الماركة *"
+                    onChange={handleChange}
+                  >
+                    {brands.map((brand) => (
+                      <MenuItem key={brand.id} value={brand.id}>
+                        {brand.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {errors.brand_id && (
+                    <span style={{ color: "red", fontSize: "0.75rem" }}>
+                      {errors.brand_id}
+                    </span>
+                  )}
+                </FormControl>
+
                 <TextField
                   label="رقم الموديل *"
                   name="model_number"
@@ -364,16 +487,16 @@ const UpdateProd = () => {
                   }}
                   fullWidth
                 />
-                <TextField
+                {/* <TextField
                   label="الكمية المتاحة *"
-                  name="stock_quantity"
-                  value={product.stock_quantity}
+                  name="total_quantity"
+                  value={product.total_quantity}
                   onChange={handleChange}
                   type="number"
-                  error={!!errors.stock_quantity}
-                  helperText={errors.stock_quantity}
+                  error={!!errors.total_quantity}
+                  helperText={errors.total_quantity}
                   fullWidth
-                />
+                /> */}
                 <TextField
                   label="الحالة *"
                   name="status"
@@ -494,7 +617,7 @@ const UpdateProd = () => {
                   helperText={errors.release_year}
                   fullWidth
                 />
-                <TextField
+                {/* <TextField
                   label="التقييم"
                   name="rating"
                   value={product.rating}
@@ -502,7 +625,7 @@ const UpdateProd = () => {
                   type="number"
                   inputProps={{ min: 0, max: 5, step: 0.1 }}
                   fullWidth
-                />
+                /> */}
               </Box>
             </CardContent>
           </Card>
@@ -520,7 +643,7 @@ const UpdateProd = () => {
                     src={
                       product.image_cover.startsWith("data:image")
                         ? product.image_cover
-                        : `${Images}${product.image_cover}`
+                        : `${BASE_BACKEND_LOCAHOST_URL}${product.image_cover}`
                     }
                     alt="Product Preview"
                     sx={{

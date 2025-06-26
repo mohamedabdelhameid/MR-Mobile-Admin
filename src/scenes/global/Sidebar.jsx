@@ -7,16 +7,15 @@ import { tokens } from "../../theme";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
-import CreateIcon from '@mui/icons-material/Create';
-import UpgradeIcon from '@mui/icons-material/Upgrade';
-import DeleteIcon from '@mui/icons-material/Delete';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import Logo from '../../mobileLogo.png';
-import SettingsIcon from '@mui/icons-material/Settings';
-import SlideshowIcon from '@mui/icons-material/Slideshow';
-import EditIcon from '@mui/icons-material/Edit';
-import AddIcon from '@mui/icons-material/Add';
-
+import CreateIcon from "@mui/icons-material/Create";
+import UpgradeIcon from "@mui/icons-material/Upgrade";
+import DeleteIcon from "@mui/icons-material/Delete";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import Logo from "../../mobileLogo.png";
+import SettingsIcon from "@mui/icons-material/Settings";
+import SlideshowIcon from "@mui/icons-material/Slideshow";
+import EditIcon from "@mui/icons-material/Edit";
+import AddIcon from "@mui/icons-material/Add";
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
   const theme = useTheme();
@@ -126,6 +125,27 @@ const Sidebar = () => {
               setSelected={setSelected}
             />
 
+            <Typography
+              variant="h6"
+              color={colors.grey[300]}
+              sx={{ m: "15px 0 5px 20px" }}
+            >
+              Colors
+            </Typography>
+            <Item
+              title="show colors"
+              to="/showColor"
+              icon={<VisibilityIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+            <Item
+              title="Add color"
+              to="/addColor"
+              icon={<AddIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
 
             <Typography
               variant="h6"
@@ -148,23 +168,20 @@ const Sidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
-
-
-            <Typography
-              variant="h6"
-              color={colors.grey[300]}
-              sx={{ m: "15px 0 5px 20px" }}
-            >
-              Image & Color
-            </Typography>
             <Item
-              title="Add product color"
-              to="/addColor"
-              icon={<VisibilityIcon />}
+              title="add mobile color"
+              to="/addColorToMobile"
+              icon={<AddIcon />}
               selected={selected}
               setSelected={setSelected}
             />
-
+            <Item
+              title="add color image"
+              to="/addColorImage"
+              icon={<AddIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
 
             <Typography
               variant="h6"
@@ -187,7 +204,7 @@ const Sidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
-            
+
             <Typography
               variant="h6"
               color={colors.grey[300]}
@@ -205,6 +222,20 @@ const Sidebar = () => {
             <Item
               title="Create New accessoires"
               to="/crtacc"
+              icon={<AddIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+            <Item
+              title="add color accessoires"
+              to="/addColorToAccessory"
+              icon={<AddIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+            <Item
+              title="add image color"
+              to="/addAccessoryImage"
               icon={<AddIcon />}
               selected={selected}
               setSelected={setSelected}
