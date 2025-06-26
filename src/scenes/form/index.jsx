@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
-import './form.css';
-import loginPhoto from './Img/LoginPh.png';
-import welcomePhoto from './Img/correctData.png';
-import wrongPhoto from './Img/wrongData.png';
-import firstChance from './Img/firstChance.png';
+import "./form.css";
+import loginPhoto from "./Img/LoginPh.png";
+import welcomePhoto from "./Img/correctData.png";
+import wrongPhoto from "./Img/wrongData.png";
+import firstChance from "./Img/firstChance.png";
+import BASE_BACKEND_URL from "../../API/config";
+import { Navigate } from "react-router-dom";
+import IF_NOT_ADMIN from "../../API/notAdmin";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -22,7 +25,9 @@ const Login = () => {
     e.preventDefault();
 
     if (!validateEmail(email)) {
-      setValidationError("البريد الإلكتروني غير صحيح! يرجى إدخال بريد إلكتروني صالح.");
+      setValidationError(
+        "البريد الإلكتروني غير صحيح! يرجى إدخال بريد إلكتروني صالح."
+      );
       return;
     }
 
@@ -33,7 +38,8 @@ const Login = () => {
 
     setValidationError(""); // مسح الأخطاء عند التحقق بنجاح
 
-    const response = await fetch("http://localhost:8000/api/admin/login", {
+    // const response = await fetch("http://localhost:8000/api/admin/login", {
+    const response = await fetch(`${BASE_BACKEND_URL}/admin/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -67,7 +73,7 @@ const Login = () => {
       return () => clearTimeout(timer);
     } else if (error && countdown === 0) {
       if (attempts >= 2) {
-        window.location.href = "/";
+        window.location.href = IF_NOT_ADMIN;
       } else {
         setError(false);
       }
@@ -76,37 +82,65 @@ const Login = () => {
 
   return (
     <div className="LoginContainer">
-    <div className="form">
-      {success ? (
-        <>
-          <img src={welcomePhoto} alt="مرحبًا بعودتك" width="300px" height="300px" />
-          <h1>مرحبًا بعودتك! سيتم توجيهك بعد {countdown} ثوانٍ...</h1>
-        </>
-      ) : error ? (
-        attempts >= 2 ? (
+      <div className="form">
+        {success ? (
           <>
-            <img src={wrongPhoto} alt="خطأ" width="300px" height="300px" />
-            <h1>تم استنفاد المحاولات! سيتم تحويلك إلى مستر موبايل ستور بعد {countdown} ثوانٍ...</h1>
+            <img
+              src={welcomePhoto}
+              alt="مرحبًا بعودتك"
+              width="300px"
+              height="300px"
+            />
+            <h1>مرحبًا بعودتك! سيتم توجيهك بعد {countdown} ثوانٍ...</h1>
           </>
+        ) : error ? (
+          attempts >= 2 ? (
+            <>
+              <img src={wrongPhoto} alt="خطأ" width="300px" height="300px" />
+              <h1>
+                تم استنفاد المحاولات! سيتم تحويلك إلى مستر موبايل ستور بعد{" "}
+                {countdown} ثوانٍ...
+              </h1>
+            </>
+          ) : (
+            <>
+              <img src={firstChance} alt="خطأ" width="300px" height="300px" />
+              <h1>معاك محاولة تاني بعد {countdown} ثوانٍ</h1>
+            </>
+          )
         ) : (
           <>
-            <img src={firstChance} alt="خطأ" width="300px" height="300px" />
-            <h1>معاك محاولة تاني بعد {countdown} ثوانٍ</h1>
+            <img
+              src={loginPhoto}
+              alt="تسجيل الدخول"
+              width="300px"
+              height="300px"
+            />
+            <p>
+              Welcome to MR Mobile dashboard. Please enter the correct username
+              and password to log in.
+            </p>
+            <form onSubmit={handleLogin}>
+              {validationError && (
+                <p style={{ color: "red" }}>{validationError}</p>
+              )}
+              <input
+                type="email"
+                placeholder="البريد الإلكتروني"
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+              <input
+                type="password"
+                placeholder="كلمة المرور"
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button type="submit">تسجيل الدخول</button>
+            </form>
           </>
-        )
-      ) : (
-        <>
-          <img src={loginPhoto} alt="تسجيل الدخول" width="300px" height="300px" />
-          <p>Welcome to MR Mobile dashboard. Please enter the correct username and password to log in.</p>
-          <form onSubmit={handleLogin}>
-            {validationError && <p style={{ color: "red" }}>{validationError}</p>}
-            <input type="email" placeholder="البريد الإلكتروني" onChange={(e) => setEmail(e.target.value)} required />
-            <input type="password" placeholder="كلمة المرور" onChange={(e) => setPassword(e.target.value)} required />
-            <button type="submit">تسجيل الدخول</button>
-          </form>
-        </>
-      )}
-    </div>
+        )}
+      </div>
     </div>
   );
 };

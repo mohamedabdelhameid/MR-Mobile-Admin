@@ -1,125 +1,3 @@
-// import {
-//   Box,
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableContainer,
-//   TableHead,
-//   TableRow,
-//   Paper,
-//   IconButton,
-//   Button
-// } from "@mui/material";
-// import { useEffect, useState } from "react";
-// import { useNavigate } from "react-router-dom";
-// import Header from "../components/Header";
-// import EditIcon from "@mui/icons-material/Edit";
-// import DeleteIcon from "@mui/icons-material/Delete";
-
-// const API_URL = "http://127.0.0.1:8000/api/mobiles"; // رابط API للمنتجات
-// const BRANDS_API_URL = "http://127.0.0.1:8000/api/brands"; // رابط API للبراندات
-// const Images = "http://127.0.0.1:8000/public/uploads/mobiles/"; // رابط API للصور
-
-// const Allprod = () => {
-//   const [products, setProducts] = useState([]);
-//   const [brands, setBrands] = useState([]); // قائمة البراندات
-//   const navigate = useNavigate();
-
-//   useEffect(() => {
-//     // جلب بيانات المنتجات
-//     fetch(API_URL)
-//       .then((res) => res.json())
-//       .then((data) => {
-//         console.log("Fetched Products:", data);
-//         setProducts(data.data); // تحديث هنا لاستخدام data.data
-//       })
-//       .catch((err) => console.error("Error fetching products:", err));
-
-//     // جلب بيانات البراندات
-//     fetch(BRANDS_API_URL)
-//       .then((res) => res.json())
-//       .then((data) => {
-//         console.log("Fetched Brands:", data);
-//         setBrands(data.data); // تحديث هنا لاستخدام data.data
-//       })
-//       .catch((err) => console.error("Error fetching brands:", err));
-//   }, []);
-
-//   // دالة للحصول على اسم البراند من الـ brand_id
-//   const getBrandName = (brandId) => {
-//     const brand = brands.find((brand) => brand.id === brandId);
-//     return brand ? brand.name : "Unknown Brand"; // إذا لم يتم العثور على البراند
-//   };
-
-//   const handleDeleteProduct = (id) => {
-//     fetch(`${API_URL}/${id}`, {
-//       method: "DELETE",
-//     })
-//       .then(() => {
-//         setProducts(products.filter((product) => product.id !== id));
-//       })
-//       .catch((err) => console.error("Error deleting product:", err));
-//   };
-
-//   return (
-//     <Box m="20px">
-//       <Header title="Your Products" subtitle="Manage all your products here" />
-
-//       {products.length > 0 ? (
-//         <TableContainer component={Paper} sx={{ mt: 3 }}>
-//           <Table>
-//             <TableHead>
-//               <TableRow>
-//                 <TableCell>#</TableCell> {/* عمود الترقيم */}
-//                 <TableCell>Image</TableCell>
-//                 <TableCell>Title</TableCell>
-//                 <TableCell>Brand Name</TableCell> {/* اسم البراند بدلاً من الـ ID */}
-//                 <TableCell>Model Number</TableCell>
-//                 <TableCell>Price</TableCell>
-//                 <TableCell>Actions</TableCell>
-//               </TableRow>
-//             </TableHead>
-//             <TableBody>
-//               {products.map((product, index) => (
-//                 <TableRow key={product.id}>
-//                   <TableCell>{index + 1}</TableCell> {/* ترقيم يبدأ من 1 */}
-//                   <TableCell>
-//                     {product.image && (
-//                       <img
-//                         src={product.image}
-//                         alt={product.title}
-//                         width="80"
-//                         height="100"
-//                         style={{ objectFit: "cover", borderRadius: "5px" }}
-//                       />
-//                     )}
-//                   </TableCell>
-//                   <TableCell>{product.title}</TableCell>
-//                   <TableCell>{getBrandName(product.brand_id)}</TableCell> {/* اسم البراند */}
-//                   <TableCell>{product.model_number}</TableCell>
-//                   <TableCell>${product.price}</TableCell>
-//                   <TableCell>
-//                     <IconButton color="warning" onClick={() => navigate(`/updateprod/${product.id}`)}>
-//                       <EditIcon />
-//                     </IconButton>
-//                     <IconButton color="error" onClick={() => handleDeleteProduct(product.id)}>
-//                       <DeleteIcon />
-//                     </IconButton>
-//                   </TableCell>
-//                 </TableRow>
-//               ))}
-//             </TableBody>
-//           </Table>
-//         </TableContainer>
-//       ) : (
-//         <p style={{ textAlign: "center", marginTop: "20px" }}>لا توجد منتجات متاحة</p>
-//       )}
-//     </Box>
-//   );
-// };
-
-// export default Allprod;
-
 import {
   Box,
   Table,
@@ -137,10 +15,15 @@ import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import BASE_BACKEND_LOCAHOST_URL from "../API/localhost";
+import BASE_BACKEND_URL from "../API/config";
 
-const API_URL = "http://127.0.0.1:8000/api/accessories"; // رابط API للمنتجات
-const BRANDS_API_URL = "http://127.0.0.1:8000/api/brands"; // رابط API للبراندات
-const Images = "http://127.0.0.1:8000"; // رابط API للصور
+// const API_URL = "http://127.0.0.1:8000/api/accessories"; // رابط API للمنتجات
+// const BRANDS_API_URL = "http://127.0.0.1:8000/api/brands"; // رابط API للبراندات
+// const BASE_BACKEND_LOCAHOST_URL = "http://127.0.0.1:8000"; // رابط API للصور
+// const BASE_BACKEND_LOCAHOST_URL = "http://127.0.0.1:8000";
+const API_URL = `${BASE_BACKEND_URL}/accessories`;
+const BRANDS_API_URL = `${BASE_BACKEND_URL}/brands`;
 
 const Showacc = () => {
   const [products, setProducts] = useState([]);
@@ -248,7 +131,7 @@ const handleDeleteProduct = async (id) => {
                   <TableCell>
                     {product.image && (
                       <img
-                        src={`${Images}${product.image}`}
+                        src={`${BASE_BACKEND_LOCAHOST_URL}${product.image}`}
                         alt={product.title}
                         width="80"
                         height="100"

@@ -1,7 +1,5 @@
 import { Box, Typography, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import "./notFound.css";
-// import "./NotFound.module.css";
 import img from '../notFound.png';
 import Logo from '../mobileLogo.svg';
 
@@ -10,9 +8,9 @@ const NotFound = () => {
 
   return (
     <div dir="ltr">
-      <img src={Logo} alt="" width='100px' />
-      <Box className="notFound" display="flex" flexDirection="column" justifyContent="center" alignItems="center" height="100vh" textAlign="center" dir="rtl">
-        <img src={img} alt=""/>
+      {/* <img src={Logo} alt="" width='100px' /> */}
+      <Box className="notFound" display="flex" flexDirection="column" justifyContent="center" alignItems="center" height="80vh" textAlign="center" dir="rtl">
+        <img src={img} alt="" style={{padding: '20px',position: 'relative',left: '10px'}}/>
         <Typography variant="h5" mb={2}>
           الصفحة غير موجودة
         </Typography>

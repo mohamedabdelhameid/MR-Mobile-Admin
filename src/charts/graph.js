@@ -10,6 +10,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import BASE_BACKEND_URL from '../API/config';
 
 // Register ChartJS components
 ChartJS.register(
@@ -32,7 +33,8 @@ const StatisticsChart = () => {
 
     const fetchData = async () => {
       try {
-        const response = await fetch("http://localhost:8000/api/statistics", {
+        // const response = await fetch("http://localhost:8000/api/statistics", {
+        const response = await fetch(`${BASE_BACKEND_URL}/statistics`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -60,7 +62,7 @@ const StatisticsChart = () => {
   }, []);
 
   const chartData = {
-    labels: ["الطلبات", "المستخدمين", "الرسائل"],
+    labels: ["الطلبات", "المستخدمين", "الرسائل" ],
     datasets: [
       {
         label: "الإحصائيات",
@@ -130,7 +132,7 @@ const StatisticsChart = () => {
 
   return (
     <div style={{ width: "100%", height: "400px", padding: "20px" }}>
-      <Line data={chartData} options={chartOptions} />
+      <Line data={chartData} options={chartOptions} hover/>
     </div>
   );
 };

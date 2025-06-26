@@ -11,14 +11,18 @@ import {
   MenuItem,
   Alert,
   FormControl,
+  InputLabel,
   Autocomplete,
 } from "@mui/material";
 import Header from "../components/Header";
 import AddIcon from "@mui/icons-material/Add";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import BASE_BACKEND_URL from "../API/config";
 
-const API_URL = "http://127.0.0.1:8000/api/accessories";
-const BRANDS_API_URL = "http://127.0.0.1:8000/api/brands";
+// const API_URL = "http://127.0.0.1:8000/api/accessories";
+// const BRANDS_API_URL = "http://127.0.0.1:8000/api/brands";
+const API_URL = `${BASE_BACKEND_URL}/accessories`;
+const BRANDS_API_URL = `${BASE_BACKEND_URL}/brands`;
 
 const statusToAPI = {
   active: "available",
@@ -29,11 +33,11 @@ const statusToAPI = {
 const CreateAccessory = () => {
   const [formData, setFormData] = useState({
     title: "",
-    brand: null,
+    brand_id: null, // تم التغيير من brandId إلى كائن brand كامل
     description: "",
-    battery: null,
-    speed: null,
-    color: "#000000",
+    battery: "",
+    speed: "",
+    color: "",
     price: "",
     discount: "",
     stockQuantity: "",
@@ -52,6 +56,7 @@ const CreateAccessory = () => {
   });
   const [loading, setLoading] = useState(false);
 
+  // جلب الماركات عند تحميل المكون
   useEffect(() => {
     const fetchBrands = async () => {
       setLoadingBrands(true);
@@ -63,7 +68,7 @@ const CreateAccessory = () => {
         });
         const data = await response.json();
         if (response.ok) {
-          setBrands(data.data);
+          setBrands(data.data); // البيانات تأتي كمصفوفة في `data.data`
         } else {
           throw new Error(data.message || "فشل في جلب الماركات");
         }
@@ -87,21 +92,15 @@ const CreateAccessory = () => {
   const validateFields = () => {
     let newErrors = {};
 
-    // الحقول الإجبارية
     if (!formData.title.trim()) newErrors.title = "عنوان المنتج مطلوب";
-    if (!formData.brand) newErrors.brand = "الماركة مطلوبة";
+    if (!formData.brand) newErrors.brand = "الماركة مطلوبة"; // تم التغيير إلى brand
     if (!formData.description.trim()) newErrors.description = "الوصف مطلوب";
+    // if (!formData.battery) newErrors.battery = "سعة البطارية مطلوبة";
     if (!formData.price) newErrors.price = "السعر مطلوب";
-    if (!formData.stockQuantity) newErrors.stockQuantity = "الكمية المتاحة مطلوبة";
+    // if (!formData.stockQuantity)
+    //   newErrors.stockQuantity = "الكمية المتاحة مطلوبة";
     if (!formData.image) newErrors.image = "صورة المنتج مطلوبة";
-
-    // الحقول الاختيارية (التحقق فقط إذا كانت تحتوي على قيمة)
-    if (formData.battery !== null && isNaN(formData.battery)) {
-      newErrors.battery = "يجب أن تكون قيمة رقمية";
-    }
-    if (formData.speed !== null && isNaN(formData.speed)) {
-      newErrors.speed = "يجب أن تكون قيمة رقمية";
-    }
+    if (!formData.status) newErrors.status = "حالة المنتج مطلوبة";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -125,21 +124,18 @@ const CreateAccessory = () => {
       setFormData({ ...formData, brand: value });
     } else {
       const { name, value } = e.target;
-      setFormData({ 
-        ...formData, 
-        [name]: value === "" ? null : value 
-      });
+      setFormData({ ...formData, [name]: value });
     }
   };
 
   const resetForm = () => {
     setFormData({
       title: "",
-      brand: null,
+      brand_id: null,
       description: "",
-      battery: null,
-      speed: null,
-      color: "#000000",
+      battery: "",
+      speed: "",
+      color: "",
       price: "",
       discount: "",
       stockQuantity: "",
@@ -150,18 +146,28 @@ const CreateAccessory = () => {
     document.getElementById("image").style.display = "none";
   };
 
-  const handleAddAccessory = async () => {
+  const handleAddAccessory = () => {
     if (!validateFields()) {
       showSnackbar("الرجاء تعبئة جميع الحقول المطلوبة", "error");
       return;
     }
 
+    // تحقق إضافي من وجود الماركة
+    if (!formData.brand || !formData.brand.id) {
+      showSnackbar("الرجاء اختيار ماركة صالحة", "error");
+      return;
+    }
+
     const data = new FormData();
+    data.append("brand_id", formData.brand.id); // ← هنا يتم استخدام `id`
+
+    setLoading(true);
+
     data.append("title", formData.title);
-    data.append("brand_id", formData.brand.id);
+    data.append("brand_id", formData.brand.id); // استخدام _id من الكائن
     data.append("description", formData.description);
-    data.append("battery", formData.battery || "");
-    data.append("speed", formData.speed || "");
+    data.append("battery", formData.battery);
+    data.append("speed", formData.speed);
     data.append("color", formData.color);
     data.append("price", formData.price);
     data.append("discount", formData.discount || 0);
@@ -170,36 +176,35 @@ const CreateAccessory = () => {
     data.append("status", statusToAPI[formData.status]);
     data.append("image", formData.image);
 
-    setLoading(true);
+    const token = localStorage.getItem("token");
 
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: data,
-      });
-
-      const responseData = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(responseData.message || "فشل في إضافة الإكسسوار");
-      }
-
-      resetForm();
-      showSnackbar("تمت إضافة الإكسسوار بنجاح!", "success");
-      setTimeout(() => {
-        window.location.href = "/showacc";
-      }, 1500);
-    } catch (err) {
-      console.error("Error:", err);
-      showSnackbar(err.message || "فشل في إضافة الإكسسوار!", "error");
-    } finally {
-      setLoading(false);
-    }
+    fetch(API_URL, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: data,
+    })
+      .then(async (res) => {
+        const responseData = await res.json();
+        if (!res.ok) {
+          throw new Error(responseData.message || "فشل في إضافة الإكسسوار");
+        }
+        return responseData;
+      })
+      .then(() => {
+        resetForm();
+        showSnackbar("تمت إضافة الإكسسوار بنجاح!", "success");
+        setTimeout(() => {
+          window.location.href = "/showacc";
+        }, 1500);
+      })
+      .catch((err) => {
+        console.error("Error:", err);
+        showSnackbar(err.message || "فشل في إضافة الإكسسوار!", "error");
+      })
+      .finally(() => setLoading(false));
   };
 
   const handleCloseSnackbar = () => {
@@ -280,6 +285,11 @@ const CreateAccessory = () => {
                   />
                 )}
               />
+              {errors.brand && (
+                <span style={{ color: "red", fontSize: "0.75rem" }}>
+                  {errors.brand}
+                </span>
+              )}
             </FormControl>
 
             <TextField
@@ -306,40 +316,32 @@ const CreateAccessory = () => {
           <Box display="flex" flexWrap="wrap" gap="10px" my="20px">
             <TextField
               name="battery"
-              label="سعة البطارية (mAh)"
+              label="سعة البطارية (mAh) *"
               variant="outlined"
-              type="number"
-              value={formData.battery || ""}
+              type="Number"
+              value={formData.battery}
               onChange={handleChange}
               error={!!errors.battery}
               helperText={errors.battery}
-              InputProps={{
-                inputProps: { min: 0 }
-              }}
             />
             <TextField
               name="speed"
-              label="سرعة الشاحن (speed)"
+              label="سرعة الشاحن *"
               variant="outlined"
-              type="number"
-              value={formData.speed || ""}
+              type="Number"
+              value={formData.speed}
               onChange={handleChange}
               error={!!errors.speed}
               helperText={errors.speed}
-              InputProps={{
-                inputProps: { min: 0 }
-              }}
             />
-            <TextField
+            {/* <TextField
               name="color"
-              label="اللون"
+              label="اللون *"
               variant="outlined"
-              type="color"
+              type="text"
               value={formData.color}
               onChange={handleChange}
-              InputLabelProps={{ shrink: true }}
-              fullWidth
-            />
+            /> */}
           </Box>
         </AccordionDetails>
       </Accordion>
@@ -363,7 +365,6 @@ const CreateAccessory = () => {
                 startAdornment: (
                   <InputAdornment position="start">ج.م</InputAdornment>
                 ),
-                inputProps: { min: 0 }
               }}
             />
             <TextField
@@ -377,10 +378,9 @@ const CreateAccessory = () => {
                 startAdornment: (
                   <InputAdornment position="start">%</InputAdornment>
                 ),
-                inputProps: { min: 0, max: 100 }
               }}
             />
-            <TextField
+            {/* <TextField
               name="stockQuantity"
               label="الكمية المتاحة *"
               variant="outlined"
@@ -389,10 +389,7 @@ const CreateAccessory = () => {
               onChange={handleChange}
               error={!!errors.stockQuantity}
               helperText={errors.stockQuantity}
-              InputProps={{
-                inputProps: { min: 0 }
-              }}
-            />
+            /> */}
           </Box>
         </AccordionDetails>
       </Accordion>
@@ -410,46 +407,28 @@ const CreateAccessory = () => {
               variant="outlined"
               value={formData.status}
               onChange={handleChange}
+              error={!!errors.status}
+              helperText={errors.status}
               fullWidth
             >
-              {["active", "inactive", "coming_soon"].map((status) => (
-                <MenuItem key={status} value={status}>
-                  {status === "active"
-                    ? "متاح"
-                    : status === "inactive"
-                    ? "غير متاح"
-                    : "قريبًا"}
-                </MenuItem>
-              ))}
+              <MenuItem value="active">متوفر</MenuItem>
+              <MenuItem value="inactive">غير متوفر</MenuItem>
+              <MenuItem value="coming_soon">قريباً</MenuItem>
             </TextField>
-
-            <TextField
-              name="rating"
-              label="التقييم"
-              variant="outlined"
-              type="number"
-              value={formData.rating}
-              onChange={handleChange}
-              InputProps={{
-                inputProps: { min: 0, max: 5, step: 0.1 },
-                startAdornment: (
-                  <InputAdornment position="start">/ 5</InputAdornment>
-                ),
-              }}
-            />
           </Box>
         </AccordionDetails>
       </Accordion>
 
-      <Box display="flex" justifyContent="center" mt="20px">
+      <Box display="flex" justifyContent="center" mt={3}>
         <Button
-          onClick={handleAddAccessory}
           variant="contained"
           color="primary"
-          endIcon={<AddIcon />}
+          startIcon={<AddIcon />}
+          onClick={handleAddAccessory}
           disabled={loading}
+          sx={{ py: 1.5, px: 4, fontSize: "1.1rem" }}
         >
-          {loading ? "جاري إضافة..." : "إضافة إكسسوار"}
+          {loading ? "جاري الإضافة..." : "إضافة الإكسسوار"}
         </Button>
       </Box>
     </Box>

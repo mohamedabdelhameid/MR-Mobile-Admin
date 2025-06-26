@@ -11,7 +11,6 @@ import {
   TableHead,
   TableRow,
   Typography,
-  Avatar,
   IconButton,
   Snackbar,
   Alert,
@@ -22,11 +21,10 @@ import {
 } from '@mui/material';
 import { Delete, Edit, Add } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import BASE_BACKEND_LOCAHOST_URL from '../API/localhost';
 import BASE_BACKEND_URL from '../API/config';
 
-const BrandsList = () => {
-  const [brands, setBrands] = useState([]);
+const ColorsList = () => {
+  const [colors, setColors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [snackbar, setSnackbar] = useState({
@@ -36,20 +34,17 @@ const BrandsList = () => {
   });
   const [deleteDialog, setDeleteDialog] = useState({
     open: false,
-    brandId: null,
-    brandName: ''
+    colorId: null,
+    colorName: ''
   });
-  const [imagePreview, setImagePreview] = useState({
-    open: false,
-    imageUrl: ''
-  });
+
   const navigate = useNavigate();
 
-  // const BASE_BACKEND_LOCAHOST_URL = "http://127.0.0.1:8000";
-  const API_URL = `${BASE_BACKEND_URL}/brands`;
+  // const API_URL = "http://127.0.0.1:8000/api/colors";
+  const API_URL = `${BASE_BACKEND_URL}/colors`;
 
   useEffect(() => {
-    const fetchBrands = async () => {
+    const fetchColors = async () => {
       try {
         setLoading(true);
         setError(null);
@@ -58,19 +53,19 @@ const BrandsList = () => {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
         });
-        
+
         if (!response.ok) {
           throw new Error('فشل في جلب البيانات من السيرفر');
         }
-        
+
         const data = await response.json();
-        
+
         if (data.data && Array.isArray(data.data)) {
-          setBrands(data.data);
+          setColors(data.data);
         } else if (Array.isArray(data)) {
-          setBrands(data);
-        } else if (data.brands && Array.isArray(data.brands)) {
-          setBrands(data.brands);
+          setColors(data);
+        } else if (data.colors && Array.isArray(data.colors)) {
+          setColors(data.colors);
         } else {
           throw new Error('هيكل البيانات غير متوقع من السيرفر');
         }
@@ -82,12 +77,12 @@ const BrandsList = () => {
       }
     };
 
-    fetchBrands();
+    fetchColors();
   }, []);
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(`${API_URL}/${deleteDialog.brandId}`, {
+      const response = await fetch(`${API_URL}/${deleteDialog.colorId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -95,23 +90,16 @@ const BrandsList = () => {
       });
 
       if (response.ok) {
-        showMessage('تم حذف البراند بنجاح', 'success');
-        setBrands(brands.filter(brand => brand.id !== deleteDialog.brandId));
+        showMessage('تم حذف اللون بنجاح', 'success');
+        setColors(colors.filter(color => color.id !== deleteDialog.colorId));
       } else {
-        throw new Error('فشل في حذف البراند');
+        throw new Error('فشل في حذف اللون');
       }
     } catch (error) {
       showMessage(error.message, 'error');
     } finally {
-      setDeleteDialog({ open: false, brandId: null, brandName: '' });
+      setDeleteDialog({ open: false, colorId: null, colorName: '' });
     }
-  };
-
-  const handleOpenImagePreview = (imagePath) => {
-    setImagePreview({
-      open: true,
-      imageUrl: `${BASE_BACKEND_LOCAHOST_URL}${imagePath}`
-    });
   };
 
   const showMessage = (message, severity) => {
@@ -144,69 +132,51 @@ const BrandsList = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">قائمة البراندات</Typography>
+        <Typography variant="h4">قائمة الألوان</Typography>
         <Button
           variant="contained"
           startIcon={<Add />}
-          onClick={() => navigate('/createBrand')}
+          onClick={() => navigate('/addColor')}
         >
-          إضافة براند جديد
+          إضافة لون جديد
         </Button>
       </Box>
 
       <TableContainer component={Paper} elevation={3}>
-        <Table sx={{ minWidth: 650 }} aria-label="جدول البراندات">
+        <Table sx={{ minWidth: 650 }} aria-label="جدول الألوان">
           <TableHead>
             <TableRow>
               <TableCell sx={{ fontWeight: 'bold' }}>#</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>الصورة</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }} align="right">اللون</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>الاسم</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>كود اللون</TableCell>
               <TableCell sx={{ fontWeight: 'bold', textAlign: 'center' }}>الإجراءات</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {brands.length > 0 ? (
-              brands.map((brand, index) => (
-                <TableRow
-                  key={brand.id}
-                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                >
+            {colors.length > 0 ? (
+              colors.map((color, index) => (
+                <TableRow key={color.id}>
                   <TableCell>{index + 1}</TableCell>
                   <TableCell>
-                    {brand.image ? (
-                      <Box
-                        component="img"
-                        src={`${BASE_BACKEND_LOCAHOST_URL}${brand.image}`}
-                        alt={brand.name}
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = `data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' fill='%23eee'/%3E%3Ctext x='50%25' y='50%25' fill='%23000' font-family='Arial' font-size='20' text-anchor='middle' dominant-baseline='middle'%3E${brand.name.charAt(0)}%3C/text%3E%3C/svg%3E`;
-                        }}
-                        sx={{
-                          width: 80,
-                          height: 80,
-                          objectFit: 'contain',
-                          borderRadius: 1,
-                          border: '1px solid #eee',
-                          cursor: 'pointer'
-                        }}
-                        onClick={() => handleOpenImagePreview(brand.image)}
-                      />
-                    ) : (
-                      <Avatar sx={{ width: 80, height: 80 }}>
-                        {brand.name.charAt(0)}
-                      </Avatar>
-                    )}
+                    <Box
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: "50%",
+                        backgroundColor: color.hex_code,
+                        border: '1px solid #ccc'
+                      }}
+                    />
                   </TableCell>
+                  <TableCell>{color.name}</TableCell>
                   <TableCell>
-                    <Typography variant="body1" fontWeight="medium">
-                      {brand.name}
-                    </Typography>
+                    <code>{color.hex_code}</code>
                   </TableCell>
                   <TableCell sx={{ textAlign: 'center' }}>
                     <IconButton
                       color="primary"
-                      onClick={() => navigate(`/updateBrand/${brand.id}`)}
+                      onClick={() => navigate(`/updateColor/${color.id}`)}
                     >
                       <Edit />
                     </IconButton>
@@ -214,8 +184,8 @@ const BrandsList = () => {
                       color="error"
                       onClick={() => setDeleteDialog({
                         open: true,
-                        brandId: brand.id,
-                        brandName: brand.name
+                        colorId: color.id,
+                        colorName: color.name
                       })}
                     >
                       <Delete />
@@ -225,8 +195,8 @@ const BrandsList = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} align="center">
-                  <Typography variant="body1">لا توجد براندات متاحة</Typography>
+                <TableCell colSpan={5} align="center">
+                  <Typography variant="body1">لا توجد ألوان متاحة</Typography>
                 </TableCell>
               </TableRow>
             )}
@@ -241,7 +211,7 @@ const BrandsList = () => {
       >
         <DialogTitle>تأكيد الحذف</DialogTitle>
         <DialogContent>
-          هل أنت متأكد من رغبتك في حذف "{deleteDialog.brandName}"؟
+          هل أنت متأكد من رغبتك في حذف "{deleteDialog.colorName}"؟
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialog({ ...deleteDialog, open: false })}>
@@ -253,37 +223,6 @@ const BrandsList = () => {
             variant="contained"
           >
             حذف
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* معاينة الصورة */}
-      <Dialog
-        open={imagePreview.open}
-        onClose={() => setImagePreview({ ...imagePreview, open: false })}
-        maxWidth="md"
-      >
-        <DialogTitle>معاينة صورة البراند</DialogTitle>
-        <DialogContent>
-          <Box
-            component="img"
-            src={imagePreview.imageUrl}
-            alt="معاينة الصورة"
-            sx={{
-              width: '100%',
-              height: 'auto',
-              maxHeight: '70vh',
-              objectFit: 'contain'
-            }}
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = 'data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'600\' height=\'400\' viewBox=\'0 0 600 400\'%3E%3Crect width=\'600\' height=\'400\' fill=\'%23eee\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' fill=\'%23000\' font-family=\'Arial\' font-size=\'24\' text-anchor=\'middle\' dominant-baseline=\'middle\'%3Eتعذر تحميل الصورة%3C/text%3E%3C/svg%3E';
-            }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setImagePreview({ ...imagePreview, open: false })}>
-            إغلاق
           </Button>
         </DialogActions>
       </Dialog>
@@ -307,4 +246,4 @@ const BrandsList = () => {
   );
 };
 
-export default BrandsList;
+export default ColorsList;

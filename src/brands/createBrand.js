@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Button, TextField, Box, Snackbar, Alert } from "@mui/material";
 import { CloudUpload } from "@mui/icons-material";
+import BASE_BACKEND_URL from "../API/config";
 
-const BRANDS_API_URL = "http://127.0.0.1:8000/api/brands";
+const BRANDS_API_URL = `${BASE_BACKEND_URL}/brands`;
 
 const AddBrand = () => {
   const [brand, setBrand] = useState({
